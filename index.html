@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <title>Sidereal Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="/manifest.json">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json"> <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -123,7 +122,8 @@
         <label class="flex items-center gap-2">Month: <select id="month-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
         <div class="flex gap-2 ml-auto">
           <button id="merge-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 font-semibold px-4 py-2 rounded-md shadow-sm">Merge</button>
-          <button id="unmerge-btn" class="bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Unmerge</button> <button id="print-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Print</button>
+          <button id="unmerge-btn" class="bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Unmerge</button>
+          <button id="print-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Print</button>
 		  <button id="today-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
         </div>
       </div>
@@ -151,7 +151,7 @@
       // --- DOM Elements ---
       const calendarBody = document.getElementById("calendar-body");
       const mergeBtn = document.getElementById("merge-btn");
-      const unmergeBtn = document.getElementById("unmerge-btn"); // NEW
+      const unmergeBtn = document.getElementById("unmerge-btn");
       const printBtn = document.getElementById("print-btn");
       const todayBtn = document.getElementById("today-btn");
       const yearSelect = document.getElementById("year-select");
@@ -461,7 +461,7 @@
         saveData(); // Save the new merged state
       });
 
-      unmergeBtn.addEventListener("click", () => { // NEW UNMERGE LOGIC
+      unmergeBtn.addEventListener("click", () => {
           if (selectedCells.length !== 1) {
               alert("Please select exactly one merged Nare cell to unmerge.");
               return;
@@ -563,6 +563,17 @@
 
       populateSelects();
       createCalendar();
+      
+      // *** PWA Service Worker Registration ***
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').then(() => {
+          console.log('Service Worker Registered for Calendar');
+        }).catch(error => {
+          console.error('Service Worker Registration Failed:', error);
+        });
+      }
+      // *** End PWA Service Worker Registration ***
+
     });
   </script>
 </body>
