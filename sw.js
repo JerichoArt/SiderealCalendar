@@ -9,7 +9,7 @@ const urlsToCache = [
   // '/icons/icon-512x512.png',
   // Note: External CDN resources like Tailwind CSS are generally not cached by your service worker.
 ];
-
+ 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
