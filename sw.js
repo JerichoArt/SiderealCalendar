@@ -1,15 +1,16 @@
 const CACHE_NAME = 'sidereal-calendar-v1';
 const urlsToCache = [
-  '/',
-  '/index.html', // Assuming you'll rename index 4.html to index.html
-  '/manifest.json',
-  '/sw.js',
-  // Add paths to your icons here once created, e.g.:
-  // '/icons/icon-192x192.png',
-  // '/icons/icon-512x512.png',
-  // Note: External CDN resources like Tailwind CSS are generally not cached by your service worker.
+  './', // Caches the root (index.html)
+  'index.html',
+  'manifest.json',
+  'sw.js',
+  'https://cdn.tailwindcss.com', // Caches Tailwind CSS
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap', // Caches Google Fonts CSS
+  'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMwwnxmr-Ew.woff2', // Example: Caches a specific Inter font file (adjust if needed)
+  'icon-192x192.png', // Caches your icons
+  'icon-512x512.png'   // Caches your icons
 ];
- 
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -28,7 +29,6 @@ self.addEventListener('fetch', (event) => {
         if (response) {
           return response;
         }
-        // No cache hit - fetch from network
         return fetch(event.request);
       })
   );
@@ -41,7 +41,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            // Delete old caches
             return caches.delete(cacheName);
           }
         })
