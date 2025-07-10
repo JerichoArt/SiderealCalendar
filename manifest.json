@@ -1,23 +1,21 @@
 {
   "name": "Sidereal Calendar",
-  "short_name": "Sidereal Cal",
-  "description": "Your custom Sidereal Calendar web application.",
-  "start_url": "/index.html",
+  "short_name": "Calendar",
+  "description": "Your personal Sidereal Calendar for tracking time.",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f7fafc",
-  "theme_color": "#edf2f7",
+  "theme_color": "#1a202c",
   "icons": [
     {
-      "src": "/icon-192x192.png",
+      "src": "icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "/icon-512x512.png",
+      "src": "icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
-  ],
-  "orientation": "portrait"
+  ]
 }
