@@ -23,7 +23,7 @@
     }
     th, td {
       border: 1px solid #e2e8f0;
-      padding: 0.75rem;
+      padding: 0.05rem;
       text-align: left;
       vertical-align: top;
     }
@@ -64,7 +64,7 @@
       min-height: 50px;
       width: 100%;
       outline: none;
-      padding: 4px;
+      padding: 2px;
     }
     .nare-content:focus, .whole-day-content:focus {
         box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
@@ -84,7 +84,23 @@
     .today-highlight-nare {
         background-color: #9ae6b4; /* Darker green */
     }
-    button {
+    
+	/* Tooltip styles */
+    .time-tooltip {
+      position: absolute;
+      background-color: rgba(0, 0, 0, 0.4);
+      color: ##d5d8de;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      pointer-events: none; /* Prevents the tooltip from blocking mouse events */
+      z-index: 20; /* Ensures it appears on top of other elements */
+      white-space: nowrap;
+      display: none; /* Hidden by default */
+      transform: translateY(-10px);
+    }
+	
+	button {
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
     }
     button:active {
@@ -127,6 +143,8 @@
 		  <button id="today-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
         </div>
       </div>
+
+		<div id="time-tooltip" class="time-tooltip"></div>
 
       <div class="overflow-x-auto shadow-lg rounded-lg">
         <table id="calendar-table">
@@ -218,7 +236,18 @@
           // Add these elapsed seconds (converted to milliseconds) to the EPOCH date
           return new Date(EPOCH.getTime() + (elapsedRealSeconds * 1000));
       }
-
+	// Generic debounce function to limit how often a function is called
+      const debounce = (func, delay) => {
+          let timeoutId;
+          return (...args) => {
+              clearTimeout(timeoutId);
+              timeoutId = setTimeout(() => {
+                  func.apply(this, args);
+              }, delay);
+          };
+      };
+	  const debouncedSaveData = debounce(saveData, 500);
+	  
       // --- Data Persistence (Local Storage) ---
       function getStorageKey() {
         return `sidereal-calendar-${yearSelect.value}-${seasonSelect.value}-${monthSelect.value}`;
@@ -314,7 +343,7 @@
           const wholeContent = document.createElement("div");
           wholeContent.contentEditable = true;
           wholeContent.className = "whole-day-content";
-          wholeContent.addEventListener('input', saveData);
+          wholeContent.addEventListener('input', debouncedSaveData);
           wholeDayTd.appendChild(wholeContent);
           tr.appendChild(wholeDayTd);
 
@@ -326,7 +355,7 @@
             const nareContent = document.createElement("div");
             nareContent.className = "nare-content";
             nareContent.contentEditable = true;
-            nareContent.addEventListener('input', saveData);
+            nareContent.addEventListener('input', debouncedSaveData);
             td.appendChild(nareContent);
             td.addEventListener("click", (e) => handleCellClick(e, td));
             tr.appendChild(td);
@@ -502,6 +531,85 @@
           highlightWorkingHours(); // Re-highlight after unmerge
       });
 
+		// --- Time on Hover Tooltip ---
+      const timeTooltip = document.getElementById('time-tooltip');
+
+      calendarBody.addEventListener('mouseover', (e) => {
+          const targetCell = e.target.closest('.nare-cell');
+          if (!targetCell) {
+              return;
+          }
+
+          // Get sidereal date from the hovered cell and dropdowns
+          const siderealYear = parseInt(yearSelect.value);
+          const seasonIndex = parseInt(seasonSelect.value);
+          const monthIndex = parseInt(monthSelect.value);
+          const siderealDayInMonth = parseInt(targetCell.dataset.day);
+          const nareNumber = parseInt(targetCell.dataset.nare);
+
+          // Calculate real-world start and end times
+          const gregorianNareStart = getGregorianDateFromSidereal(
+              siderealYear,
+              seasonIndex,
+              monthIndex,
+              siderealDayInMonth,
+              nareNumber
+          );
+          const gregorianNareEnd = new Date(gregorianNareStart.getTime() + (SECONDS_PER_NARE_REAL * 1000));
+          
+          // Format the times for display
+          const startTime = gregorianNareStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const endTime = gregorianNareEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          
+          timeTooltip.innerHTML = `${startTime} - ${endTime}`;
+          timeTooltip.style.display = 'block';
+
+          // Position the tooltip near the mouse cursor
+          const rect = targetCell.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+          timeTooltip.style.top = `${rect.top + scrollTop - timeTooltip.offsetHeight - 5}px`;
+          timeTooltip.style.left = `${rect.left + scrollLeft + (rect.width / 2) - (timeTooltip.offsetWidth / 2)}px`;
+      });
+
+      calendarBody.addEventListener('mouseout', (e) => {
+          if (!e.relatedTarget || !e.relatedTarget.closest('.nare-cell')) {
+              timeTooltip.style.display = 'none';
+          }
+      });
+
+		// *** Touch Event Listeners for Multi-Cell Selection (for mobile) ***
+      let touchSelectionActive = false;
+
+      calendarBody.addEventListener('touchstart', (e) => {
+          const targetCell = e.target.closest('.nare-cell');
+          if (!targetCell) return;
+          
+          touchSelectionActive = true;
+          // Clear and select the first cell touched
+          selectedCells.forEach(cell => cell.classList.remove('selected'));
+          selectedCells = [targetCell];
+          targetCell.classList.add('selected');
+      });
+
+      calendarBody.addEventListener('touchmove', (e) => {
+          if (!touchSelectionActive) return;
+
+          const touch = e.touches[0];
+          const targetCell = document.elementFromPoint(touch.clientX, touch.clientY);
+          const cell = targetCell.closest('.nare-cell');
+
+          if (cell && !selectedCells.includes(cell)) {
+              cell.classList.add('selected');
+              selectedCells.push(cell);
+          }
+      });
+
+      calendarBody.addEventListener('touchend', () => {
+          touchSelectionActive = false;
+      });
+      // *** End Touch Event Listeners ***
 
       printBtn.addEventListener("click", () => window.print());
 
