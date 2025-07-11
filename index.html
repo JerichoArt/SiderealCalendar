@@ -196,7 +196,7 @@
       // --- Sidereal Clock Logic (from real-world to sidereal) ---
       function getSiderealDate() {
         const nowDate = new Date(); // Current real-world date/time
-        const elapsed = (nowDate - EPOCH) / 1000; // Elapsed seconds from EPOCH
+        const elapsed = (Date.now() - EPOCH.getTime()) / 1000; // Elapsed seconds from EPOCH
         const totalPings = elapsed / PING_LENGTH;
         
         const totalNares = totalPings / (PINGS_PER_SEC * SECS_PER_DIN * DINS_PER_NARE);
