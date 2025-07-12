@@ -85,21 +85,19 @@
         background-color: #9ae6b4; /* Darker green */
     }
     
-	/* Tooltip styles */
-    .time-tooltip {
-      position: absolute;
-      background-color: rgba(0, 0, 0, 0.4);
-      color: ##d5d8de;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      pointer-events: none; /* Prevents the tooltip from blocking mouse events */
-      z-index: 20; /* Ensures it appears on top of other elements */
-      white-space: nowrap;
-      display: none; /* Hidden by default */
-      transform: translateY(-10px);
+	    /* New styles for the control box */
+    #nare-display-output {
+      font-size: 0.9rem;
+      color: #1a202c;
+      background-color: #e2e8f0;
+      border: 1px solid #cbd5e0;
+      min-height: 38px; /* To match input/button height */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
-	
+
 	button {
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
     }
@@ -137,14 +135,20 @@
         <label class="flex items-center gap-2">Season: <select id="season-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
         <label class="flex items-center gap-2">Month: <select id="month-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
         <div class="flex gap-2 ml-auto">
-          <button id="merge-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 font-semibold px-4 py-2 rounded-md shadow-sm">Merge</button>
+                  <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner ml-auto">
+          <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
+          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 w-48 md:w-auto focus:ring-blue-500 focus:border-blue-500">
+          <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
+          <div id="nare-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">
+            Click a Nare box
+          </div>
+        </div>
+		<button id="merge-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 font-semibold px-4 py-2 rounded-md shadow-sm">Merge</button>
           <button id="unmerge-btn" class="bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Unmerge</button>
           <button id="print-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Print</button>
 		  <button id="today-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
         </div>
       </div>
-
-		<div id="time-tooltip" class="time-tooltip"></div>
 
       <div class="overflow-x-auto shadow-lg rounded-lg">
         <table id="calendar-table">
@@ -190,6 +194,171 @@
       const PING_LENGTH = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY * DINS_PER_NARE * SECS_PER_DIN * PINGS_PER_SEC);
       const SECONDS_PER_NARE_REAL = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY);
 
+// --- NEW CODE BLOCK STARTS HERE ---
+      // --- New DOM Elements for Control Box ---
+      const datetimeInput = document.getElementById("datetime-input");
+      const goToBtn = document.getElementById("go-to-btn");
+      const nareDisplayOutput = document.getElementById("nare-display-output");
+
+      // --- New function: Convert Gregorian to Sidereal ---
+      // This function takes a Gregorian Date object and returns its corresponding Sidereal date components.
+      function getSiderealDateFromGregorian(gregorianDate) {
+        // Ensure the date is not before the EPOCH
+        if (gregorianDate.getTime() < EPOCH.getTime()) {
+          console.error("Date is before J2000 epoch. Cannot convert.");
+          return null;
+        }
+
+        const elapsed = (gregorianDate.getTime() - EPOCH.getTime()) / 1000; // Elapsed seconds from EPOCH
+
+        const totalPings = elapsed / PING_LENGTH;
+        const totalNares = totalPings / (PINGS_PER_SEC * SECS_PER_DIN * DINS_PER_NARE);
+        const totalDays = Math.floor(totalNares / NARES_PER_DAY);
+
+        const siderealYear = Math.floor(elapsed / SIDEREAL_YEAR_SECS);
+        const dayOfYear = totalDays % DAYS_IN_YEAR;
+
+        const daysPerSeason = DAYS_IN_MONTH * MONTHS_PER_SEASON;
+        const seasonIndex = Math.floor(dayOfYear / daysPerSeason);
+        const dayInSeason = dayOfYear % daysPerSeason;
+
+        const monthIndex = Math.floor(dayInSeason / DAYS_IN_MONTH);
+        const dayInMonth = (dayInSeason % DAYS_IN_MONTH) + 1; // 1-indexed day
+        const nareOfDay = Math.floor(totalNares % NARES_PER_DAY) + 1; // 1-indexed Nare
+
+        // Calculate Dins and Pings within the current Nare for more precise time
+        const naresElapsedInDay = totalNares % NARES_PER_DAY;
+        const dinsInNare = Math.floor((naresElapsedInDay - Math.floor(naresElapsedInDay)) * DINS_PER_NARE);
+        const pingsInDin = Math.floor((((naresElapsedInDay - Math.floor(naresElapsedInDay)) * DINS_PER_NARE) - dinsInNare) * SECS_PER_DIN * PINGS_PER_SEC);
+
+        return {
+          year: siderealYear,
+          season: seasonIndex,
+          month: monthIndex,
+          day: dayInMonth,
+          nare: nareOfDay,
+          din: dinsInNare,
+          ping: pingsInDin
+        };
+      }
+	
+      // --- Event Listener for Nare Cell Clicks (to display in control box) ---
+      // Modify the createCalendar function to attach this listener
+      // Find the existing `nareCell.addEventListener('click', ...)` or similar block
+      // and replace or augment it with the following:
+      function attachNareClickListeners() {
+        document.querySelectorAll('.nare-content').forEach(nareContent => {
+          nareContent.removeEventListener('click', handleNareContentClick); // Remove old listener if exists
+          nareContent.addEventListener('click', handleNareContentClick);
+        });
+      }
+
+      function handleNareContentClick(event) {
+          isLocked = true; // 🔒 Lock it
+		          const nareContent = event.target;
+          const nareCell = nareContent.closest('.nare-cell');
+          const day = parseInt(nareCell.dataset.day);
+          const nare = parseInt(nareCell.dataset.nare);
+
+        const siderealYear = parseInt(yearSelect.value);
+        const seasonIndex = parseInt(seasonSelect.value);
+        const monthIndex = parseInt(monthSelect.value);
+
+        // Get the Gregorian date for the clicked Nare
+        const gregorianDate = getGregorianDateFromSidereal(siderealYear, seasonIndex, monthIndex, day, nare);
+
+        // Format the Gregorian date and time
+        const formattedDate = gregorianDate.toLocaleDateString('en-GB', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
+        const formattedTime = gregorianDate.toLocaleTimeString('en-GB', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false // Use 24-hour format
+        });
+
+        nareDisplayOutput.textContent = `${formattedDate} ${formattedTime}`;
+      }
+		document.addEventListener('click', (e) => {
+		if (
+		!e.target.closest('.nare-cell') &&
+		!e.target.closest('#calendar-body') &&
+		!e.target.closest('#nare-display-output')
+		) {
+		isLocked = false;
+		nareDisplayOutput.textContent = "Click a Nare box";
+	}
+	});
+
+      // --- Event Listener for Control Box Input (to navigate to Nare box) ---
+      goToBtn.addEventListener('click', function() {
+        const inputString = datetimeInput.value.trim();
+        if (!inputString) {
+          nareDisplayOutput.textContent = "Please enter a date and time.";
+          return;
+        }
+
+        const [datePart, timePart] = inputString.split(' ');
+        if (!datePart || !timePart) {
+          nareDisplayOutput.textContent = "Invalid format. Use YYYY-MM-DD HH:MM:SS";
+          return;
+        }
+
+        const [day, month, year] = datePart.split('/').map(Number);
+        const [hours, minutes] = timePart.split(':').map(Number);
+		const seconds = 0; // Set seconds to 0
+		
+        // Note: Month in Date constructor is 0-indexed
+        const gregorianInputDate = new Date(year, month - 1, day, hours, minutes, seconds);
+
+// Add a small offset (1 minute) to ensure we are in the middle of the Nare
+            gregorianInputDate.setMinutes(gregorianInputDate.getMinutes() + 1);
+// Convert to Sidereal Date
+            const siderealDate = getSiderealDateFromGregorian(gregorianInputDate);
+
+        if (isNaN(gregorianInputDate.getTime())) {
+          nareDisplayOutput.textContent = "Invalid date/time entered.";
+          return;
+        }
+
+        if (gregorianInputDate.getTime() < EPOCH.getTime()) {
+          nareDisplayOutput.textContent = "Date must be after J2000 epoch (2000-01-01 00:00:00 UTC).";
+          return;
+        }
+
+        const siderealTarget = getSiderealDateFromGregorian(gregorianInputDate);
+
+        if (siderealTarget) {
+          // Update dropdowns if necessary
+          yearSelect.value = siderealTarget.year;
+          seasonSelect.value = siderealTarget.season;
+          monthSelect.value = siderealTarget.month;
+
+          // Re-create calendar to show the correct month/season/year
+          createCalendar();
+
+          // Find and "click" the target Nare box
+          // Use setTimeout to ensure the calendar has re-rendered
+          setTimeout(() => {
+            const targetCell = document.querySelector(
+              `.nare-cell[data-day="${siderealTarget.day}"][data-nare="${siderealTarget.nare}"]`
+            );
+            if (targetCell) {
+              targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				targetCell.querySelector('.nare-content').focus();
+              nareDisplayOutput.textContent = `Mapped to Year ${siderealTarget.year}, Season ${siderealTarget.season+1}, Month ${siderealTarget.month+1}, Day ${siderealTarget.day}, Nare ${siderealTarget.nare}`;
+            } else {
+              nareDisplayOutput.textContent = "Could not find target Nare box.";
+            }
+          }, 100); // Small delay to allow DOM update
+        } else {
+          nareDisplayOutput.textContent = "Error converting date.";
+        }
+      });
+      // --- NEW CODE BLOCK ENDS HERE ---
+
       let selectedCells = [];
       let currentHighlight = null;
 
@@ -210,7 +379,7 @@
         const dayInSeason = dayOfYear % daysPerSeason;
         
         const monthIndex = Math.floor(dayInSeason / DAYS_IN_MONTH);
-        const dayInMonth = (dayInSeason % DAYS_IN_MONTH) + 1; // 1-indexed day
+        const dayInMonth = (dayInSeason % DAYS_IN_MONTH) + 1;
         
         const nareOfDay = Math.floor(totalNares % NARES_PER_DAY) + 1; // 1-indexed Nare
 
@@ -356,7 +525,8 @@
             nareContent.className = "nare-content";
             nareContent.contentEditable = true;
             nareContent.addEventListener('input', debouncedSaveData);
-            td.appendChild(nareContent);
+            nareContent.addEventListener('click', handleNareContentClick);
+			td.appendChild(nareContent);
             td.addEventListener("click", (e) => handleCellClick(e, td));
             tr.appendChild(td);
           }
@@ -412,6 +582,8 @@
                   
                   if (isWorkingHours) {
                       cell.classList.add('nare-working-hours');
+					  
+					  
                   }
               });
           });
@@ -531,11 +703,11 @@
           highlightWorkingHours(); // Re-highlight after unmerge
       });
 
-		// --- Time on Hover Tooltip ---
-      const timeTooltip = document.getElementById('time-tooltip');
+
 
       calendarBody.addEventListener('mouseover', (e) => {
-          const targetCell = e.target.closest('.nare-cell');
+          if (isLocked) return; // Don't overwrite if locked
+		  const targetCell = e.target.closest('.nare-cell');
           if (!targetCell) {
               return;
           }
@@ -561,23 +733,19 @@
           const startTime = gregorianNareStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           const endTime = gregorianNareEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           
-          timeTooltip.innerHTML = `${startTime} - ${endTime}`;
-          timeTooltip.style.display = 'block';
+		nareDisplayOutput.textContent = `${gregorianNareStart.toLocaleDateString()} ${gregorianNareStart.toLocaleTimeString()} to ${gregorianNareEnd.toLocaleTimeString()}`;
+
 
           // Position the tooltip near the mouse cursor
           const rect = targetCell.getBoundingClientRect();
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
           const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
 
-          timeTooltip.style.top = `${rect.top + scrollTop - timeTooltip.offsetHeight - 5}px`;
-          timeTooltip.style.left = `${rect.left + scrollLeft + (rect.width / 2) - (timeTooltip.offsetWidth / 2)}px`;
       });
-
-      calendarBody.addEventListener('mouseout', (e) => {
-          if (!e.relatedTarget || !e.relatedTarget.closest('.nare-cell')) {
-              timeTooltip.style.display = 'none';
-          }
-      });
+		// No action on mouseout anymore
+		calendarBody.addEventListener('mouseout', (e) => {
+		// Do nothing: keep lock as is
+	});
 
 		// *** Touch Event Listeners for Multi-Cell Selection (for mobile) ***
       let touchSelectionActive = false;
