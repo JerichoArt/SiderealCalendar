@@ -128,7 +128,7 @@
 </head>
 <body class="p-4 md:p-6">
   <div class="max-w-7xl mx-auto">
-      <h1 class="text-3xl font-bold mb-4 text-center text-gray-800">Sidereal Calendar</h1>
+      <h1 class="text-3xl font-bold mb-4 text-center text-gray-800">Sidereal Decimal Calendar</h1>
 
       <div class="controls flex flex-wrap items-center gap-4 mb-4">
         <label class="flex items-center gap-2">Year: <select id="year-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
@@ -137,7 +137,7 @@
         <div class="flex gap-2 ml-auto">
                   <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner ml-auto">
           <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
-          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 w-fit focus:ring-blue-500 focus:border-blue-500" style="width: fit-content;">
+          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
           <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
           <div id="nare-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">
             Click an Hour box
@@ -166,7 +166,13 @@
           <tbody id="calendar-body"></tbody>
         </table>
       </div>
-  </div>
+
+      <div id="data-controls" class="flex flex-col md:flex-row gap-4 mt-8 justify-center items-center">
+          <button id="export-btn" class="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-6 py-2 rounded-md shadow-lg">Export Data</button>
+          <button id="import-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow-lg">Import Data</button>
+          <input type="file" id="file-input" accept="application/json" class="hidden">
+      </div>
+      </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -179,6 +185,10 @@
       const yearSelect = document.getElementById("year-select");
       const seasonSelect = document.getElementById("season-select");
       const monthSelect = document.getElementById("month-select");
+      // --- New DOM Elements for Data Transfer ---
+      const exportBtn = document.getElementById("export-btn");
+      const importBtn = document.getElementById("import-btn");
+      const fileInput = document.getElementById("file-input");
 
       // --- Calendar & Clock Constants ---
       const DAYS_IN_MONTH = 50;
@@ -838,6 +848,97 @@
           seasonSelect.addEventListener('change', handleDropdownChange);
           monthSelect.addEventListener('change', handleDropdownChange);
       }
+      
+      // --- New: Import/Export Functions ---
+      function getAllCalendarData() {
+          const data = {};
+          for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key.startsWith('sidereal-calendar-')) {
+                  data[key] = localStorage.getItem(key);
+              }
+          }
+          return data;
+      }
+
+      function exportData() {
+          const data = getAllCalendarData();
+          const dataStr = JSON.stringify(data, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'sidereal-calendar-data.json';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          alert('Calendar data exported successfully!');
+      }
+
+      function importData(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            alert('No file selected.');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                let changesMade = false;
+
+                // Iterate through the keys in the imported data
+                for (const key in importedData) {
+                    if (key.startsWith('sidereal-calendar-')) {
+                        const importedMonthData = JSON.parse(importedData[key]);
+                        const existingMonthDataString = localStorage.getItem(key);
+
+                        if (existingMonthDataString) {
+                            // Data exists for this month, so merge
+                            const existingMonthData = JSON.parse(existingMonthDataString);
+
+                            // Merge wholeDay data
+                            Object.assign(existingMonthData.wholeDay, importedMonthData.wholeDay);
+
+                            // Merge nare data (deep merge)
+                            for (const day in importedMonthData.nares) {
+                                if (!existingMonthData.nares[day]) {
+                                    existingMonthData.nares[day] = {};
+                                }
+                                Object.assign(existingMonthData.nares[day], importedMonthData.nares[day]);
+                            }
+
+                            localStorage.setItem(key, JSON.stringify(existingMonthData));
+                            changesMade = true;
+                        } else {
+                            // No existing data, so just add the new data
+                            localStorage.setItem(key, importedData[key]);
+                            changesMade = true;
+                        }
+                    }
+                }
+
+                if (changesMade) {
+                    alert('Calendar data merged successfully!');
+                    loadData(); // Reload the calendar to show the merged data
+                } else {
+                    alert('No new calendar data was found to merge.');
+                }
+            } catch (error) {
+                alert('Error importing file. Please ensure it is a valid JSON file.');
+                console.error('Import error:', error);
+            }
+        };
+        reader.readAsText(file);
+    }
+
+      // Add event listeners for new buttons
+      exportBtn.addEventListener('click', exportData);
+      importBtn.addEventListener('click', () => fileInput.click()); // Trigger the hidden file input
+      fileInput.addEventListener('change', importData);
+      // --- End New: Import/Export Functions ---
 
       populateSelects();
       createCalendar();
