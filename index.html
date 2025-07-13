@@ -137,10 +137,10 @@
         <div class="flex gap-2 ml-auto">
                   <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner ml-auto">
           <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
-          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 w-48 md:w-auto focus:ring-blue-500 focus:border-blue-500">
+          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 w-fit focus:ring-blue-500 focus:border-blue-500" style="width: fit-content;">
           <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
           <div id="nare-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">
-            Click a Nare box
+            Click an Hour box
           </div>
         </div>
 		<button id="merge-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 font-semibold px-4 py-2 rounded-md shadow-sm">Merge</button>
@@ -156,7 +156,7 @@
             <tr id="header-row-main">
               <th rowspan="2">Day</th>
               <th rowspan="2">Whole Day</th>
-              <th colspan="10">Nares</th>
+              <th colspan="10">Hours</th>
             </tr>
              <tr id="header-row-sub">
                 <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th>
@@ -288,7 +288,7 @@
 		!e.target.closest('#nare-display-output')
 		) {
 		isLocked = false;
-		nareDisplayOutput.textContent = "Click a Nare box";
+		nareDisplayOutput.textContent = "Click an Hour box";
 	}
 	});
 
@@ -301,17 +301,19 @@
         }
 
         const [datePart, timePart] = inputString.split(' ');
+		//marker from this point
+		
         if (!datePart || !timePart) {
-          nareDisplayOutput.textContent = "Invalid format. Use YYYY-MM-DD HH:MM:SS";
+          nareDisplayOutput.textContent = "Invalid format. Use YYYY-MM-DD HH:MM";
           return;
         }
-
+		// marker to this point 
         const [day, month, year] = datePart.split('/').map(Number);
         const [hours, minutes] = timePart.split(':').map(Number);
 		const seconds = 0; // Set seconds to 0
 		
         // Note: Month in Date constructor is 0-indexed
-        const gregorianInputDate = new Date(year, month - 1, day, hours, minutes, seconds);
+        const gregorianInputDate = new Date(year, month - 1, day, hours, minutes);
 
 // Add a small offset (1 minute) to ensure we are in the middle of the Nare
             gregorianInputDate.setMinutes(gregorianInputDate.getMinutes() + 1);
@@ -348,9 +350,9 @@
             if (targetCell) {
               targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
 				targetCell.querySelector('.nare-content').focus();
-              nareDisplayOutput.textContent = `Mapped to Year ${siderealTarget.year}, Season ${siderealTarget.season+1}, Month ${siderealTarget.month+1}, Day ${siderealTarget.day}, Nare ${siderealTarget.nare}`;
+              nareDisplayOutput.textContent = `Mapped to Year ${siderealTarget.year}, Season ${siderealTarget.season+1}, Month ${siderealTarget.month+1}, Day ${siderealTarget.day}, Hour ${siderealTarget.nare}`;
             } else {
-              nareDisplayOutput.textContent = "Could not find target Nare box.";
+              nareDisplayOutput.textContent = "Could not find target Hour box.";
             }
           }, 100); // Small delay to allow DOM update
         } else {
@@ -610,14 +612,14 @@
 
       mergeBtn.addEventListener("click", () => {
         if (selectedCells.length < 2) {
-            alert("Select at least two Nares to merge.");
+            alert("Select at least two Hours to merge.");
             return;
         }
         selectedCells.sort((a, b) => parseInt(a.dataset.nare) - parseInt(b.dataset.nare));
         
         const firstDay = selectedCells[0].dataset.day;
         if (!selectedCells.every(cell => cell.dataset.day === firstDay)) {
-            alert("You can only merge Nares from the same day.");
+            alert("You can only merge Hours from the same day.");
             return;
         }
 
@@ -664,7 +666,7 @@
 
       unmergeBtn.addEventListener("click", () => {
           if (selectedCells.length !== 1) {
-              alert("Please select exactly one merged Nare cell to unmerge.");
+              alert("Please select exactly one merged Hour cell to unmerge.");
               return;
           }
 
@@ -839,7 +841,8 @@
 
       populateSelects();
       createCalendar();
-      
+	  
+	        
       // *** PWA Service Worker Registration ***
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(() => {
