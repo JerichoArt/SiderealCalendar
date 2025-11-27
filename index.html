@@ -5,7 +5,9 @@
   <title>Sidereal Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="manifest" href="manifest.json"> <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  
   <style>
     html, body {
       background-color: #f7fafc;
@@ -27,6 +29,16 @@
       text-align: left;
       vertical-align: top;
     }
+	/* Add inside <style> */
+.celestial-icon {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    z-index: 5;
+    pointer-events: none; /* Allows clicking through the icon to the text box */
+}
     /* Sticky controls section */
     .controls {
         position: sticky; /* Make controls sticky */
@@ -203,6 +215,14 @@
       const DINS_PER_NARE = 50;
       const PING_LENGTH = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY * DINS_PER_NARE * SECS_PER_DIN * PINGS_PER_SEC);
       const SECONDS_PER_NARE_REAL = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY);
+	  // --- Location Settings (Example: London) ---
+// CHANGE THESE TO YOUR LOCATION
+const MY_LAT = 51.5074; 
+const MY_LONG = -0.1278;
+
+// --- Icons (SVG strings, 10px) ---
+const SUN_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="orange" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/></svg>`;
+const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
 
 // --- NEW CODE BLOCK STARTS HERE ---
       // --- New DOM Elements for Control Box ---
@@ -549,57 +569,78 @@
         highlightWorkingHours(); // Call the dynamic highlighting function after loading data
       }
 
-      // --- Function to dynamically highlight working hours (9 AM - 5 PM) ---
-      function highlightWorkingHours() {
-          const rows = calendarBody.querySelectorAll('tr');
-          const currentSiderealYear = parseInt(yearSelect.value);
-          const currentSeasonIndex = parseInt(seasonSelect.value);
-          const currentMonthIndex = parseInt(monthSelect.value);
+function highlightWorkingHours() {
+    const rows = calendarBody.querySelectorAll('tr');
+    const currentSiderealYear = parseInt(yearSelect.value);
+    const currentSeasonIndex = parseInt(seasonSelect.value);
+    const currentMonthIndex = parseInt(monthSelect.value);
 
-          rows.forEach(row => {
-              const siderealDayInMonth = parseInt(row.dataset.dayRow);
-              const nareCells = row.querySelectorAll('.nare-cell');
+    rows.forEach(row => {
+        const siderealDayInMonth = parseInt(row.dataset.dayRow);
+        const nareCells = row.querySelectorAll('.nare-cell');
 
-              nareCells.forEach(cell => {
-                  cell.classList.remove('nare-working-hours'); // Reset first
+        // 1. Get the Gregorian date for the middle of this day to calculate sun times
+        // We use Nare 5 (mid-day) to get a stable date object for the whole day calculation
+        const midDayGregorian = getGregorianDateFromSidereal(
+            currentSiderealYear,
+            currentSeasonIndex,
+            currentMonthIndex,
+            siderealDayInMonth,
+            5 
+        );
 
-                  const nareNumber = parseInt(cell.dataset.nare); // 1-indexed Nare
+        // 2. Calculate Sun Times for this specific day/location
+        const sunTimes = SunCalc.getTimes(midDayGregorian, MY_LAT, MY_LONG);
+        const sunriseTime = sunTimes.sunrise.getTime();
+        const sunsetTime = sunTimes.sunset.getTime();
 
-                  // Calculate Gregorian start Date object for this Nare
-                  const gregorianNareStart = getGregorianDateFromSidereal(
-                      currentSiderealYear,
-                      currentSeasonIndex,
-                      currentMonthIndex,
-                      siderealDayInMonth,
-                      nareNumber
-                  );
-                  
-                  // Calculate Gregorian end time of this Nare
-                  const gregorianNareEnd = new Date(gregorianNareStart.getTime() + (SECONDS_PER_NARE_REAL * 1000));
+        nareCells.forEach(cell => {
+            // Clear previous highlighting
+            cell.classList.remove('nare-working-hours');
+            
+            // Remove existing icons if any exist from previous renders
+            const existingIcon = cell.querySelector('.celestial-icon');
+            if (existingIcon) existingIcon.remove();
 
-                  // Get the local date components from the Nare's start time
-                  const nareLocalYear = gregorianNareStart.getFullYear();
-                  const nareLocalMonth = gregorianNareStart.getMonth();
-                  const nareLocalDay = gregorianNareStart.getDate();
+            const nareNumber = parseInt(cell.dataset.nare); 
 
-                  // Create Date objects for 9 AM and 5 PM in the *local timezone* for the Nare's day
-                  // These will automatically convert to UTC timestamps based on local timezone offset
-                  const workingHoursStart = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 9, 0, 0);
-                  const workingHoursEnd = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 17, 0, 0);
+            // Calculate Start/End of this specific Nare
+            const gregorianNareStart = getGregorianDateFromSidereal(
+                currentSiderealYear,
+                currentSeasonIndex,
+                currentMonthIndex,
+                siderealDayInMonth,
+                nareNumber
+            );
+            const nareStartTime = gregorianNareStart.getTime();
+            const nareEndTime = nareStartTime + (SECONDS_PER_NARE_REAL * 1000);
 
-                  // Check for overlap between Nare time window and working hours window
-                  // A Nare is highlighted if any part of it falls within the 9 AM - 5 PM window
-                  const isWorkingHours = (gregorianNareEnd.getTime() > workingHoursStart.getTime()) &&
-                                         (gregorianNareStart.getTime() < workingHoursEnd.getTime());
-                  
-                  if (isWorkingHours) {
-                      cell.classList.add('nare-working-hours');
-					  
-					  
-                  }
-              });
-          });
-      }
+            // --- Working Hours Logic (Existing) ---
+            const nareLocalYear = gregorianNareStart.getFullYear();
+            const nareLocalMonth = gregorianNareStart.getMonth();
+            const nareLocalDay = gregorianNareStart.getDate();
+            const workingHoursStart = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 9, 0, 0).getTime();
+            const workingHoursEnd = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 17, 0, 0).getTime();
+
+            const isWorkingHours = (nareEndTime > workingHoursStart) && (nareStartTime < workingHoursEnd);
+            if (isWorkingHours) {
+                cell.classList.add('nare-working-hours');
+            }
+
+            // --- New: Celestial Icons Logic ---
+            
+            // Check if Sunrise falls within this Nare
+            if (sunriseTime >= nareStartTime && sunriseTime < nareEndTime) {
+                cell.insertAdjacentHTML('beforeend', SUN_ICON);
+            }
+
+            // Check if Sunset falls within this Nare
+            if (sunsetTime >= nareStartTime && sunsetTime < nareEndTime) {
+                cell.insertAdjacentHTML('beforeend', MOON_ICON);
+            }
+        });
+    });
+}
 
       // --- Event Handlers ---
       function handleCellClick(event, cell) {
