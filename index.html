@@ -175,7 +175,19 @@
       <div class="controls flex flex-wrap items-center gap-4 mb-4">
         <label class="flex items-center gap-2">Year: <select id="year-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
         <label class="flex items-center gap-2">Season: <select id="season-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
-        <label class="flex items-center gap-2">Month: <select id="month-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
+        <label class="flex items-center gap-1">
+  Month: 
+  <div class="inline-flex items-center bg-gray-100 rounded border border-gray-300 overflow-hidden">
+    <!-- Left Arrow Button -->
+    <button id="prev-month-btn" type="button" class="px-2 py-1 bg-white hover:bg-gray-200 border-r border-gray-300 font-bold">&larr;</button>
+    
+    <!-- Your existing select dropdown (border removed so it blends smoothly) -->
+    <select id="month-select" class="bg-white px-2 py-1 outline-none"></select>
+    
+    <!-- Right Arrow Button -->
+    <button id="next-month-btn" type="button" class="px-2 py-1 bg-white hover:bg-gray-200 border-l border-gray-300 font-bold">&rarr;</button>
+  </div>
+</label>
         
         <!-- FIX: Reconfigured button wrapper utility classes to break cleanly into vertical lines on mobile views instead of expanding off-screen -->
         <div class="flex flex-wrap gap-2 w-full lg:w-auto lg:ml-auto justify-center sm:justify-start">
