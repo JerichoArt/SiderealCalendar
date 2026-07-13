@@ -846,6 +846,74 @@
           yearSelect.addEventListener('change', handleDropdownChange);
           seasonSelect.addEventListener('change', handleDropdownChange);
           monthSelect.addEventListener('change', handleDropdownChange);
+
+          // --- NEW: Multi-tier Calendar Paging Logic ---
+          const prevBtn = document.getElementById("prev-month-btn");
+          const nextBtn = document.getElementById("next-month-btn");
+
+          // Advance Forward Logic
+          nextBtn.addEventListener("click", () => {
+            let currentMonth = parseInt(monthSelect.value);
+            let currentSeason = parseInt(seasonSelect.value);
+            let currentYear = parseInt(yearSelect.value);
+
+            currentMonth++; // Increment month
+
+            if (currentMonth > 4) { // Max month index is 4 (Month V)
+              currentMonth = 0;    // Reset to Month I
+              currentSeason++;     // Advance Season
+
+              if (currentSeason > 3) { // Max season index is 3 (Delta)
+                currentSeason = 0;     // Reset to Season Alpha
+                currentYear++;         // Advance Year
+
+                if (currentYear > 100) {
+                  currentYear = 100; // Cap at max year option
+                  currentSeason = 3; 
+                  currentMonth = 4;
+                  return; // Don't reload if out of bounds
+                }
+              }
+            }
+
+            // Sync selectors and redraw calendar window
+            yearSelect.value = currentYear;
+            seasonSelect.value = currentSeason;
+            monthSelect.value = currentMonth;
+            createCalendar();
+          });
+
+          // Go Backward Logic
+          prevBtn.addEventListener("click", () => {
+            let currentMonth = parseInt(monthSelect.value);
+            let currentSeason = parseInt(seasonSelect.value);
+            let currentYear = parseInt(yearSelect.value);
+
+            currentMonth--; // Decrement month
+
+            if (currentMonth < 0) {
+              currentMonth = 4;    // Reset to Month V
+              currentSeason--;     // Regress Season
+
+              if (currentSeason < 0) {
+                currentSeason = 3;     // Reset to Season Delta
+                currentYear--;         // Regress Year
+
+                if (currentYear < 0) {
+                  currentYear = 0; // Cap at minimum year option
+                  currentSeason = 0;
+                  currentMonth = 0;
+                  return; // Don't reload if out of bounds
+                }
+              }
+            }
+
+            // Sync selectors and redraw calendar window
+            yearSelect.value = currentYear;
+            seasonSelect.value = currentSeason;
+            monthSelect.value = currentMonth;
+            createCalendar();
+          });
       }
       
       function getAllCalendarData() {
