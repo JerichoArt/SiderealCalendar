@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <title>Sidereal Calendar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="manifest" href="manifest.json"> <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="manifest" href="manifest.json"> 
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   
@@ -16,47 +17,71 @@
       padding: 0;
       font-family: 'Inter', sans-serif;
     }
+
+    /* FIX: Prevents columns from squishing into unreadable strips on mobile */
     table {
       width: 100%;
+      min-width: 900px; 
       table-layout: fixed;
       border-collapse: collapse;
       border: 1px solid #e2e8f0;
       background-color: white;
     }
+
     th, td {
       border: 1px solid #e2e8f0;
-      padding: 0.05rem;
+      padding: 0.25rem;
       text-align: left;
       vertical-align: top;
     }
-	/* Add inside <style> */
-.celestial-icon {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 10px;
-    height: 10px;
-    z-index: 5;
-    pointer-events: none; /* Allows clicking through the icon to the text box */
-}
-    /* Sticky controls section */
+
+    .celestial-icon {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 10px;
+        height: 10px;
+        z-index: 5;
+        pointer-events: none; 
+    }
+
+    /* FIX: Controls sit naturally at the top without causing scroll-plane conflicts */
     .controls {
-        position: sticky; /* Make controls sticky */
-        top: 0; /* Stick to the top of the viewport */
-        z-index: 10; /* Ensure it's above other content when sticky */
-        background-color: white; /* Ensure it covers content when sticky */
         padding: 1rem;
         border-radius: 0.5rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        background-color: white;
     }
-    /* Table header (thead th) will now scroll normally with the table */
+
+    /* FIX: Restricts calendar height so it scrolls cleanly inside its own viewport window */
+    .overflow-x-auto {
+      max-height: 68vh; 
+      overflow-y: auto;  
+      overflow-x: auto;
+      position: relative;
+    }
+
+    /* FIX: Makes headers sticky relative to the inner calendar container window */
     thead th {
-      background-color: #edf2f7; /* Background color for the header cells */
+      background-color: #edf2f7; 
       text-align: center;
       font-weight: 500;
       color: #4a5568;
-      /* Removed: position: sticky, top, z-index, as the whole thead will scroll */
+      position: sticky;
     }
+
+    /* Freezes top header row ("Day", "Whole Day", "Hours") at the container top */
+    #header-row-main th {
+      top: 0;
+      z-index: 25; 
+    }
+
+    /* Freezes second header row (Hours 1 through 10) directly underneath row 1 */
+    #header-row-sub th {
+      top: 28px; 
+      z-index: 20;
+    }
+
     .day-number {
       font-size: 1.5rem;
       font-weight: bold;
@@ -64,76 +89,81 @@
       width: 70px;
       background-color: #f7fafc;
     }
+
     .whole-day-cell {
         min-height: 50px;
     }
+
     .nare-cell {
       min-height: 90px;
       overflow-wrap: break-word;
       position: relative;
     }
+
     .nare-content, .whole-day-content {
       min-height: 50px;
       width: 100%;
       outline: none;
       padding: 2px;
     }
+
     .nare-content:focus, .whole-day-content:focus {
         box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
         border-radius: 4px;
     }
-	.nare-working-hours {
-        background-color: #d1f7d1; /* A light green for working hours (screen display) */
+
+    .nare-working-hours {
+        background-color: #d1f7d1; 
     }
 
     .selected {
-      background-color: #fefcbf; /* Softer yellow */
+      background-color: #fefcbf; 
       border-color: #fbd38d;
     }
+
     .today-highlight {
-        background-color: #e6f2ea; /* Light Grey */
+        background-color: #e6f2ea; 
     }
+
     .today-highlight-nare {
-        background-color: #9ae6b4; /* Darker green */
+        background-color: #9ae6b4; 
     }
     
-	    /* New styles for the control box */
     #nare-display-output {
       font-size: 0.9rem;
       color: #1a202c;
       background-color: #e2e8f0;
       border: 1px solid #cbd5e0;
-      min-height: 38px; /* To match input/button height */
+      min-height: 38px; 
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
     }
 
-	button {
+    button {
         transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
     }
+
     button:active {
         transform: scale(0.98);
     }
+
     @media print {
       body {
         background: white;
         color: black;
       }
-      /* Hide controls and specific buttons when printing */
       .controls, #merge-btn, #unmerge-btn, #print-btn, #today-btn, #year-select, #month-select, #season-select, label {
         display: none !important;
       }
-      /* Ensure table borders are visible */
       table, th, td {
           border: 1px solid #ccc;
       }
-      /* Print style for working hours: light grey fill */
       .nare-working-hours {
-        background-color: #f0f0f0 !important; /* Very light grey for print */
-        -webkit-print-color-adjust: exact; /* For WebKit browsers to print background colors */
-        print-color-adjust: exact; /* Standard property for printing background colors */
+        background-color: #f0f0f0 !important; 
+        -webkit-print-color-adjust: exact; 
+        print-color-adjust: exact; 
       }
     }
   </style>
@@ -146,19 +176,21 @@
         <label class="flex items-center gap-2">Year: <select id="year-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
         <label class="flex items-center gap-2">Season: <select id="season-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
         <label class="flex items-center gap-2">Month: <select id="month-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
-        <div class="flex gap-2 ml-auto">
-                  <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner ml-auto">
-          <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
-          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
-          <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
-          <div id="nare-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">
-            Click an Hour box
+        
+        <!-- FIX: Reconfigured button wrapper utility classes to break cleanly into vertical lines on mobile views instead of expanding off-screen -->
+        <div class="flex flex-wrap gap-2 w-full lg:w-auto lg:ml-auto justify-center sm:justify-start">
+          <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner">
+            <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
+            <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800 focus:ring-blue-500 focus:border-blue-500">
+            <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
+            <div id="nare-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">
+              Click an Hour box
+            </div>
           </div>
-        </div>
-		<button id="merge-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 font-semibold px-4 py-2 rounded-md shadow-sm">Merge</button>
+          <button id="merge-btn" class="bg-yellow-400 hover:bg-yellow-500 text-yellow-800 font-semibold px-4 py-2 rounded-md shadow-sm">Merge</button>
           <button id="unmerge-btn" class="bg-indigo-400 hover:bg-indigo-500 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Unmerge</button>
           <button id="print-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Print</button>
-		  <button id="today-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
+          <button id="today-btn" class="bg-cyan-500 hover:bg-cyan-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
         </div>
       </div>
 
@@ -184,7 +216,7 @@
           <button id="import-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow-lg">Import Data</button>
           <input type="file" id="file-input" accept="application/json" class="hidden">
       </div>
-      </div>
+  </div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -197,7 +229,6 @@
       const yearSelect = document.getElementById("year-select");
       const seasonSelect = document.getElementById("season-select");
       const monthSelect = document.getElementById("month-select");
-      // --- New DOM Elements for Data Transfer ---
       const exportBtn = document.getElementById("export-btn");
       const importBtn = document.getElementById("import-btn");
       const fileInput = document.getElementById("file-input");
@@ -206,7 +237,6 @@
       const DAYS_IN_MONTH = 50;
       const NARES_PER_DAY = 10;
       const SIDEREAL_YEAR_SECS = (365 * 86400) + (5 * 3600) + (48 * 60) + 45;
-      // Epoch set to J2000 epoch as 0 hour for both calendars (UTC)
       const EPOCH = new Date('2000-01-01T00:00:00.000Z'); 
       const DAYS_IN_YEAR = 1000;
       const MONTHS_PER_SEASON = 5;
@@ -215,32 +245,25 @@
       const DINS_PER_NARE = 50;
       const PING_LENGTH = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY * DINS_PER_NARE * SECS_PER_DIN * PINGS_PER_SEC);
       const SECONDS_PER_NARE_REAL = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY);
-	  // --- Location Settings (Example: London) ---
-// CHANGE THESE TO YOUR LOCATION
-const MY_LAT = 51.5074; 
-const MY_LONG = -0.1278;
 
-// --- Icons (SVG strings, 10px) ---
-const SUN_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="orange" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/></svg>`;
-const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      const MY_LAT = 51.5074; 
+      const MY_LONG = -0.1278;
 
-// --- NEW CODE BLOCK STARTS HERE ---
-      // --- New DOM Elements for Control Box ---
+      const SUN_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="orange" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/></svg>`;
+      const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
       const datetimeInput = document.getElementById("datetime-input");
       const goToBtn = document.getElementById("go-to-btn");
       const nareDisplayOutput = document.getElementById("nare-display-output");
+      let isLocked = false;
 
-      // --- New function: Convert Gregorian to Sidereal ---
-      // This function takes a Gregorian Date object and returns its corresponding Sidereal date components.
       function getSiderealDateFromGregorian(gregorianDate) {
-        // Ensure the date is not before the EPOCH
         if (gregorianDate.getTime() < EPOCH.getTime()) {
           console.error("Date is before J2000 epoch. Cannot convert.");
           return null;
         }
 
-        const elapsed = (gregorianDate.getTime() - EPOCH.getTime()) / 1000; // Elapsed seconds from EPOCH
-
+        const elapsed = (gregorianDate.getTime() - EPOCH.getTime()) / 1000; 
         const totalPings = elapsed / PING_LENGTH;
         const totalNares = totalPings / (PINGS_PER_SEC * SECS_PER_DIN * DINS_PER_NARE);
         const totalDays = Math.floor(totalNares / NARES_PER_DAY);
@@ -253,10 +276,9 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
         const dayInSeason = dayOfYear % daysPerSeason;
 
         const monthIndex = Math.floor(dayInSeason / DAYS_IN_MONTH);
-        const dayInMonth = (dayInSeason % DAYS_IN_MONTH) + 1; // 1-indexed day
-        const nareOfDay = Math.floor(totalNares % NARES_PER_DAY) + 1; // 1-indexed Nare
+        const dayInMonth = (dayInSeason % DAYS_IN_MONTH) + 1; 
+        const nareOfDay = Math.floor(totalNares % NARES_PER_DAY) + 1; 
 
-        // Calculate Dins and Pings within the current Nare for more precise time
         const naresElapsedInDay = totalNares % NARES_PER_DAY;
         const dinsInNare = Math.floor((naresElapsedInDay - Math.floor(naresElapsedInDay)) * DINS_PER_NARE);
         const pingsInDin = Math.floor((((naresElapsedInDay - Math.floor(naresElapsedInDay)) * DINS_PER_NARE) - dinsInNare) * SECS_PER_DIN * PINGS_PER_SEC);
@@ -272,57 +294,51 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
         };
       }
 	
-      // --- Event Listener for Nare Cell Clicks (to display in control box) ---
-      // Modify the createCalendar function to attach this listener
-      // Find the existing `nareCell.addEventListener('click', ...)` or similar block
-      // and replace or augment it with the following:
       function attachNareClickListeners() {
         document.querySelectorAll('.nare-content').forEach(nareContent => {
-          nareContent.removeEventListener('click', handleNareContentClick); // Remove old listener if exists
+          nareContent.removeEventListener('click', handleNareContentClick); 
           nareContent.addEventListener('click', handleNareContentClick);
         });
       }
 
       function handleNareContentClick(event) {
-          isLocked = true; // 🔒 Lock it
-		          const nareContent = event.target;
+          isLocked = true; 
+          const nareContent = event.target;
           const nareCell = nareContent.closest('.nare-cell');
           const day = parseInt(nareCell.dataset.day);
           const nare = parseInt(nareCell.dataset.nare);
 
-        const siderealYear = parseInt(yearSelect.value);
-        const seasonIndex = parseInt(seasonSelect.value);
-        const monthIndex = parseInt(monthSelect.value);
+          const siderealYear = parseInt(yearSelect.value);
+          const seasonIndex = parseInt(seasonSelect.value);
+          const monthIndex = parseInt(monthSelect.value);
 
-        // Get the Gregorian date for the clicked Nare
-        const gregorianDate = getGregorianDateFromSidereal(siderealYear, seasonIndex, monthIndex, day, nare);
+          const gregorianDate = getGregorianDateFromSidereal(siderealYear, seasonIndex, monthIndex, day, nare);
 
-        // Format the Gregorian date and time
-        const formattedDate = gregorianDate.toLocaleDateString('en-GB', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit'
-        });
-        const formattedTime = gregorianDate.toLocaleTimeString('en-GB', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false // Use 24-hour format
-        });
+          const formattedDate = gregorianDate.toLocaleDateString('en-GB', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+          const formattedTime = gregorianDate.toLocaleTimeString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false 
+          });
 
-        nareDisplayOutput.textContent = `${formattedDate} ${formattedTime}`;
+          nareDisplayOutput.textContent = `${formattedDate} ${formattedTime}`;
       }
-		document.addEventListener('click', (e) => {
-		if (
-		!e.target.closest('.nare-cell') &&
-		!e.target.closest('#calendar-body') &&
-		!e.target.closest('#nare-display-output')
-		) {
-		isLocked = false;
-		nareDisplayOutput.textContent = "Click an Hour box";
-	}
-	});
 
-      // --- Event Listener for Control Box Input (to navigate to Nare box) ---
+      document.addEventListener('click', (e) => {
+        if (
+          !e.target.closest('.nare-cell') &&
+          !e.target.closest('#calendar-body') &&
+          !e.target.closest('#nare-display-output')
+        ) {
+          isLocked = false;
+          nareDisplayOutput.textContent = "Click an Hour box";
+        }
+      });
+
       goToBtn.addEventListener('click', function() {
         const inputString = datetimeInput.value.trim();
         if (!inputString) {
@@ -331,24 +347,17 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
         }
 
         const [datePart, timePart] = inputString.split(' ');
-		//marker from this point
 		
         if (!datePart || !timePart) {
-          nareDisplayOutput.textContent = "Invalid format. Use YYYY-MM-DD HH:MM";
+          nareDisplayOutput.textContent = "Invalid format. Use DD/MM/YYYY HH:MM";
           return;
         }
-		// marker to this point 
+
         const [day, month, year] = datePart.split('/').map(Number);
         const [hours, minutes] = timePart.split(':').map(Number);
-		const seconds = 0; // Set seconds to 0
 		
-        // Note: Month in Date constructor is 0-indexed
         const gregorianInputDate = new Date(year, month - 1, day, hours, minutes);
-
-// Add a small offset (1 minute) to ensure we are in the middle of the Nare
-            gregorianInputDate.setMinutes(gregorianInputDate.getMinutes() + 1);
-// Convert to Sidereal Date
-            const siderealDate = getSiderealDateFromGregorian(gregorianInputDate);
+        gregorianInputDate.setMinutes(gregorianInputDate.getMinutes() + 1);
 
         if (isNaN(gregorianInputDate.getTime())) {
           nareDisplayOutput.textContent = "Invalid date/time entered.";
@@ -363,41 +372,38 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
         const siderealTarget = getSiderealDateFromGregorian(gregorianInputDate);
 
         if (siderealTarget) {
-          // Update dropdowns if necessary
           yearSelect.value = siderealTarget.year;
           seasonSelect.value = siderealTarget.season;
           monthSelect.value = siderealTarget.month;
 
-          // Re-create calendar to show the correct month/season/year
           createCalendar();
 
-          // Find and "click" the target Nare box
-          // Use setTimeout to ensure the calendar has re-rendered
           setTimeout(() => {
             const targetCell = document.querySelector(
               `.nare-cell[data-day="${siderealTarget.day}"][data-nare="${siderealTarget.nare}"]`
             );
-            if (targetCell) {
-              targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
-				targetCell.querySelector('.nare-content').focus();
-              nareDisplayOutput.textContent = `Mapped to Year ${siderealTarget.year}, Season ${siderealTarget.season+1}, Month ${siderealTarget.month+1}, Day ${siderealTarget.day}, Hour ${siderealTarget.nare}`;
-            } else {
-              nareDisplayOutput.textContent = "Could not find target Hour box.";
-            }
-          }, 100); // Small delay to allow DOM update
+            /* --- NEW UPDATED CODE --- */
+			if (targetCell) {
+			targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			targetCell.querySelector('.nare-content').focus();
+  
+			// Array mapping the numerical index to your Greek alphabet season names
+			const seasonNames = ["Α (Alpha)", "Β (Beta)", "Γ (Gamma)", "Δ (Delta)"];
+			const currentSeasonName = seasonNames[siderealTarget.season] || (siderealTarget.season + 1);
+
+			nareDisplayOutput.textContent = `Mapped to Year ${siderealTarget.year}, Season ${currentSeasonName}, Month ${siderealTarget.month+1}, Day ${siderealTarget.day}, Hour ${siderealTarget.nare}`;
+		}
+          }, 100); 
         } else {
           nareDisplayOutput.textContent = "Error converting date.";
         }
       });
-      // --- NEW CODE BLOCK ENDS HERE ---
 
       let selectedCells = [];
       let currentHighlight = null;
 
-      // --- Sidereal Clock Logic (from real-world to sidereal) ---
       function getSiderealDate() {
-        const nowDate = new Date(); // Current real-world date/time
-        const elapsed = (Date.now() - EPOCH.getTime()) / 1000; // Elapsed seconds from EPOCH
+        const elapsed = (Date.now() - EPOCH.getTime()) / 1000; 
         const totalPings = elapsed / PING_LENGTH;
         
         const totalNares = totalPings / (PINGS_PER_SEC * SECS_PER_DIN * DINS_PER_NARE);
@@ -413,31 +419,25 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
         const monthIndex = Math.floor(dayInSeason / DAYS_IN_MONTH);
         const dayInMonth = (dayInSeason % DAYS_IN_MONTH) + 1;
         
-        const nareOfDay = Math.floor(totalNares % NARES_PER_DAY) + 1; // 1-indexed Nare
+        const nareOfDay = Math.floor(totalNares % NARES_PER_DAY) + 1; 
 
         return { year: siderealYear, season: seasonIndex, month: monthIndex, day: dayInMonth, nare: nareOfDay };
       }
 
-      // --- New function: Convert Sidereal to Gregorian (from sidereal to real-world) ---
       function getGregorianDateFromSidereal(siderealYear, seasonIndex, monthIndex, dayInMonth, nareNumber) {
           const daysPerSeason = DAYS_IN_MONTH * MONTHS_PER_SEASON;
-          // Calculate total sidereal days from Epoch to the beginning of the target sidereal day
           const totalSiderealDaysFromEpoch = 
               (siderealYear * DAYS_IN_YEAR) + 
               (seasonIndex * daysPerSeason) + 
               (monthIndex * DAYS_IN_MONTH) + 
-              (dayInMonth - 1); // dayInMonth is 1-indexed, convert to 0-indexed for calculation
+              (dayInMonth - 1); 
 
-          // Calculate total Nares from Epoch to the beginning of the target Nare
-          const totalNaresFromEpoch = (totalSiderealDaysFromEpoch * NARES_PER_DAY) + (nareNumber - 1); // nareNumber is 1-indexed
-
-          // Calculate total real-world seconds from Epoch to the beginning of the target Nare
+          const totalNaresFromEpoch = (totalSiderealDaysFromEpoch * NARES_PER_DAY) + (nareNumber - 1); 
           const elapsedRealSeconds = totalNaresFromEpoch * SECONDS_PER_NARE_REAL;
 
-          // Add these elapsed seconds (converted to milliseconds) to the EPOCH date
           return new Date(EPOCH.getTime() + (elapsedRealSeconds * 1000));
       }
-	// Generic debounce function to limit how often a function is called
+
       const debounce = (func, delay) => {
           let timeoutId;
           return (...args) => {
@@ -449,7 +449,6 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
       };
 	  const debouncedSaveData = debounce(saveData, 500);
 	  
-      // --- Data Persistence (Local Storage) ---
       function getStorageKey() {
         return `sidereal-calendar-${yearSelect.value}-${seasonSelect.value}-${monthSelect.value}`;
       }
@@ -470,12 +469,11 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
 
           const nareCells = row.querySelectorAll('.nare-cell');
           nareCells.forEach(cell => {
-            // Only save if the cell is visible (not hidden due to merge) or if it's the start of a merged block
             if (cell.style.display !== 'none' || cell.colSpan > 1) { 
               const nare = cell.dataset.nare;
               const content = cell.querySelector('.nare-content').innerHTML;
               const colspan = cell.colSpan;
-              if (content || colspan > 1) { // Save if content exists or if it's a merged cell
+              if (content || colspan > 1) { 
                 if (!data.nares[day]) data.nares[day] = {};
                 data.nares[day][nare] = { content, colspan };
               }
@@ -489,23 +487,20 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
         const key = getStorageKey();
         const data = JSON.parse(localStorage.getItem(key));
         
-        // Reset all cells to default display/colspan before loading
         const allNareCells = calendarBody.querySelectorAll('.nare-cell');
         allNareCells.forEach(cell => {
             cell.style.display = '';
             cell.colSpan = 1;
-            cell.querySelector('.nare-content').innerHTML = ''; // Clear content to ensure fresh load
+            cell.querySelector('.nare-content').innerHTML = ''; 
         });
 
         if (!data) return;
 
-        // Load whole day content
         for (const day in data.wholeDay) {
           const cell = calendarBody.querySelector(`tr:nth-child(${day}) .whole-day-content`);
           if (cell) cell.innerHTML = data.wholeDay[day];
         }
 
-        // Load nare content and handle merges
         for (const day in data.nares) {
           for (const nare in data.nares[day]) {
             const cellData = data.nares[day][nare];
@@ -515,7 +510,6 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
             cell.querySelector('.nare-content').innerHTML = cellData.content || '';
             if (cellData.colspan > 1) {
               cell.colSpan = cellData.colspan;
-              // Hide the cells that are spanned over
               for (let i = 1; i < cellData.colspan; i++) {
                 const nextNare = parseInt(nare) + i;
                 const nextCell = calendarBody.querySelector(`.nare-cell[data-day='${day}'][data-nare='${nextNare}']`);
@@ -525,11 +519,9 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
           }
         }
       }
-
-      // --- UI & Calendar Generation ---
       
       function createCalendar() {
-        calendarBody.innerHTML = ''; // Clear existing calendar
+        calendarBody.innerHTML = ''; 
         for (let day = 1; day <= DAYS_IN_MONTH; day++) {
           const tr = document.createElement("tr");
           tr.dataset.dayRow = day;
@@ -558,93 +550,81 @@ const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568
             nareContent.contentEditable = true;
             nareContent.addEventListener('input', debouncedSaveData);
             nareContent.addEventListener('click', handleNareContentClick);
-			td.appendChild(nareContent);
+            td.appendChild(nareContent);
             td.addEventListener("click", (e) => handleCellClick(e, td));
             tr.appendChild(td);
           }
           
           calendarBody.appendChild(tr);
         }
-        loadData(); // Load data after creating the structure
-        highlightWorkingHours(); // Call the dynamic highlighting function after loading data
+        loadData(); 
+        highlightWorkingHours(); 
       }
 
-function highlightWorkingHours() {
-    const rows = calendarBody.querySelectorAll('tr');
-    const currentSiderealYear = parseInt(yearSelect.value);
-    const currentSeasonIndex = parseInt(seasonSelect.value);
-    const currentMonthIndex = parseInt(monthSelect.value);
+      function highlightWorkingHours() {
+          const rows = calendarBody.querySelectorAll('tr');
+          const currentSiderealYear = parseInt(yearSelect.value);
+          const currentSeasonIndex = parseInt(seasonSelect.value);
+          const currentMonthIndex = parseInt(monthSelect.value);
 
-    rows.forEach(row => {
-        const siderealDayInMonth = parseInt(row.dataset.dayRow);
-        const nareCells = row.querySelectorAll('.nare-cell');
+          rows.forEach(row => {
+              const siderealDayInMonth = parseInt(row.dataset.dayRow);
+              const nareCells = row.querySelectorAll('.nare-cell');
 
-        // 1. Get the Gregorian date for the middle of this day to calculate sun times
-        // We use Nare 5 (mid-day) to get a stable date object for the whole day calculation
-        const midDayGregorian = getGregorianDateFromSidereal(
-            currentSiderealYear,
-            currentSeasonIndex,
-            currentMonthIndex,
-            siderealDayInMonth,
-            5 
-        );
+              const midDayGregorian = getGregorianDateFromSidereal(
+                  currentSiderealYear,
+                  currentSeasonIndex,
+                  currentMonthIndex,
+                  siderealDayInMonth,
+                  5 
+              );
 
-        // 2. Calculate Sun Times for this specific day/location
-        const sunTimes = SunCalc.getTimes(midDayGregorian, MY_LAT, MY_LONG);
-        const sunriseTime = sunTimes.sunrise.getTime();
-        const sunsetTime = sunTimes.sunset.getTime();
+              const sunTimes = SunCalc.getTimes(midDayGregorian, MY_LAT, MY_LONG);
+              const sunriseTime = sunTimes.sunrise.getTime();
+              const sunsetTime = sunTimes.sunset.getTime();
 
-        nareCells.forEach(cell => {
-            // Clear previous highlighting
-            cell.classList.remove('nare-working-hours');
-            
-            // Remove existing icons if any exist from previous renders
-            const existingIcon = cell.querySelector('.celestial-icon');
-            if (existingIcon) existingIcon.remove();
+              nareCells.forEach(cell => {
+                  cell.classList.remove('nare-working-hours');
+                  
+                  const existingIcon = cell.querySelector('.celestial-icon');
+                  if (existingIcon) existingIcon.remove();
 
-            const nareNumber = parseInt(cell.dataset.nare); 
+                  const nareNumber = parseInt(cell.dataset.nare); 
 
-            // Calculate Start/End of this specific Nare
-            const gregorianNareStart = getGregorianDateFromSidereal(
-                currentSiderealYear,
-                currentSeasonIndex,
-                currentMonthIndex,
-                siderealDayInMonth,
-                nareNumber
-            );
-            const nareStartTime = gregorianNareStart.getTime();
-            const nareEndTime = nareStartTime + (SECONDS_PER_NARE_REAL * 1000);
+                  const gregorianNareStart = getGregorianDateFromSidereal(
+                      currentSiderealYear,
+                      currentSeasonIndex,
+                      currentMonthIndex,
+                      siderealDayInMonth,
+                      nareNumber
+                  );
+                  const nareStartTime = gregorianNareStart.getTime();
+                  const nareEndTime = nareStartTime + (SECONDS_PER_NARE_REAL * 1000);
 
-            // --- Working Hours Logic (Existing) ---
-            const nareLocalYear = gregorianNareStart.getFullYear();
-            const nareLocalMonth = gregorianNareStart.getMonth();
-            const nareLocalDay = gregorianNareStart.getDate();
-            const workingHoursStart = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 9, 0, 0).getTime();
-            const workingHoursEnd = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 17, 0, 0).getTime();
+                  const nareLocalYear = gregorianNareStart.getFullYear();
+                  const nareLocalMonth = gregorianNareStart.getMonth();
+                  const nareLocalDay = gregorianNareStart.getDate();
+                  const workingHoursStart = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 9, 0, 0).getTime();
+                  const workingHoursEnd = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 17, 0, 0).getTime();
 
-            const isWorkingHours = (nareEndTime > workingHoursStart) && (nareStartTime < workingHoursEnd);
-            if (isWorkingHours) {
-                cell.classList.add('nare-working-hours');
-            }
+                  const isWorkingHours = (nareEndTime > workingHoursStart) && (nareStartTime < workingHoursEnd);
+                  if (isWorkingHours) {
+                      cell.classList.add('nare-working-hours');
+                  }
+                  
+                  if (sunriseTime >= nareStartTime && sunriseTime < nareEndTime) {
+                      cell.insertAdjacentHTML('beforeend', SUN_ICON);
+                  }
 
-            // --- New: Celestial Icons Logic ---
-            
-            // Check if Sunrise falls within this Nare
-            if (sunriseTime >= nareStartTime && sunriseTime < nareEndTime) {
-                cell.insertAdjacentHTML('beforeend', SUN_ICON);
-            }
+                  if (sunsetTime >= nareStartTime && sunsetTime < nareEndTime) {
+                      cell.insertAdjacentHTML('beforeend', MOON_ICON);
+                  }
+              });
+          });
+      }
 
-            // Check if Sunset falls within this Nare
-            if (sunsetTime >= nareStartTime && sunsetTime < nareEndTime) {
-                cell.insertAdjacentHTML('beforeend', MOON_ICON);
-            }
-        });
-    });
-}
-
-      // --- Event Handlers ---
       function handleCellClick(event, cell) {
-        if (!event.ctrlKey && !event.shiftKey) { // Allow Ctrl/Shift for multiple selection
+        if (!event.ctrlKey && !event.shiftKey) { 
             selectedCells.forEach(c => c.classList.remove("selected"));
             selectedCells = [];
         }
@@ -658,7 +638,7 @@ function highlightWorkingHours() {
       }
       
       function handleDropdownChange() {
-        createCalendar(); // This will also trigger loadData for the new selection and call highlightWorkingHours
+        createCalendar(); 
       }
 
       mergeBtn.addEventListener("click", () => {
@@ -674,7 +654,6 @@ function highlightWorkingHours() {
             return;
         }
 
-        // Check for continuity and if any selected cell is already part of a merge
         for (let i = 0; i < selectedCells.length - 1; i++) {
             const currentNare = parseInt(selectedCells[i].dataset.nare);
             const nextNare = parseInt(selectedCells[i+1].dataset.nare);
@@ -691,7 +670,6 @@ function highlightWorkingHours() {
                  return;
             }
         }
-        // Also check the last cell if it's already merged
         if (selectedCells[selectedCells.length - 1].colSpan > 1 || selectedCells[selectedCells.length - 1].style.display === 'none') {
              alert("Cannot merge cells that are already part of an existing merge.");
              selectedCells.forEach(c => c.classList.remove("selected"));
@@ -699,12 +677,11 @@ function highlightWorkingHours() {
              return;
         }
 
-
         const firstCell = selectedCells[0];
         let mergedContent = selectedCells.map(cell => cell.querySelector('.nare-content').innerHTML).filter(Boolean);
         firstCell.querySelector('.nare-content').innerHTML = mergedContent.join("<br>");
         firstCell.colSpan = selectedCells.length;
-        firstCell.style.display = ''; // Ensure first cell is visible
+        firstCell.style.display = ''; 
 
         for (let i = 1; i < selectedCells.length; i++) {
             selectedCells[i].style.display = 'none';
@@ -712,7 +689,7 @@ function highlightWorkingHours() {
 
         selectedCells.forEach(c => c.classList.remove("selected"));
         selectedCells = [];
-        saveData(); // Save the new merged state
+        saveData(); 
       });
 
       unmergeBtn.addEventListener("click", () => {
@@ -733,46 +710,36 @@ function highlightWorkingHours() {
           const startNare = parseInt(mergedCell.dataset.nare);
           const originalContent = mergedCell.querySelector('.nare-content').innerHTML;
 
-          // Reset the merged cell
           mergedCell.colSpan = 1;
-          // For simplicity, put all content into the first unmerged cell
-          // You might want more sophisticated content distribution here if needed
           mergedCell.querySelector('.nare-content').innerHTML = originalContent; 
 
-          // Make subsequent cells visible and clear their content
           for (let i = 1; i < currentColspan; i++) {
               const nextNare = startNare + i;
               const nextCell = calendarBody.querySelector(`.nare-cell[data-day='${day}'][data-nare='${nextNare}']`);
               if (nextCell) {
-                  nextCell.style.display = ''; // Make it visible
-                  nextCell.colSpan = 1; // Ensure colspan is 1
-                  nextCell.querySelector('.nare-content').innerHTML = ''; // Clear any residual content
+                  nextCell.style.display = ''; 
+                  nextCell.colSpan = 1; 
+                  nextCell.querySelector('.nare-content').innerHTML = ''; 
               }
           }
           
           selectedCells.forEach(c => c.classList.remove("selected"));
           selectedCells = [];
-          saveData(); // Save the unmerged state
-          highlightWorkingHours(); // Re-highlight after unmerge
+          saveData(); 
+          highlightWorkingHours(); 
       });
 
-
-
       calendarBody.addEventListener('mouseover', (e) => {
-          if (isLocked) return; // Don't overwrite if locked
+          if (isLocked) return; 
 		  const targetCell = e.target.closest('.nare-cell');
-          if (!targetCell) {
-              return;
-          }
+          if (!targetCell) return;
 
-          // Get sidereal date from the hovered cell and dropdowns
           const siderealYear = parseInt(yearSelect.value);
           const seasonIndex = parseInt(seasonSelect.value);
           const monthIndex = parseInt(monthSelect.value);
           const siderealDayInMonth = parseInt(targetCell.dataset.day);
           const nareNumber = parseInt(targetCell.dataset.nare);
 
-          // Calculate real-world start and end times
           const gregorianNareStart = getGregorianDateFromSidereal(
               siderealYear,
               seasonIndex,
@@ -782,25 +749,9 @@ function highlightWorkingHours() {
           );
           const gregorianNareEnd = new Date(gregorianNareStart.getTime() + (SECONDS_PER_NARE_REAL * 1000));
           
-          // Format the times for display
-          const startTime = gregorianNareStart.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const endTime = gregorianNareEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          
-		nareDisplayOutput.textContent = `${gregorianNareStart.toLocaleDateString()} ${gregorianNareStart.toLocaleTimeString()} to ${gregorianNareEnd.toLocaleTimeString()}`;
-
-
-          // Position the tooltip near the mouse cursor
-          const rect = targetCell.getBoundingClientRect();
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-
+          nareDisplayOutput.textContent = `${gregorianNareStart.toLocaleDateString()} ${gregorianNareStart.toLocaleTimeString()} to ${gregorianNareEnd.toLocaleTimeString()}`;
       });
-		// No action on mouseout anymore
-		calendarBody.addEventListener('mouseout', (e) => {
-		// Do nothing: keep lock as is
-	});
 
-		// *** Touch Event Listeners for Multi-Cell Selection (for mobile) ***
       let touchSelectionActive = false;
 
       calendarBody.addEventListener('touchstart', (e) => {
@@ -808,7 +759,6 @@ function highlightWorkingHours() {
           if (!targetCell) return;
           
           touchSelectionActive = true;
-          // Clear and select the first cell touched
           selectedCells.forEach(cell => cell.classList.remove('selected'));
           selectedCells = [targetCell];
           targetCell.classList.add('selected');
@@ -819,6 +769,7 @@ function highlightWorkingHours() {
 
           const touch = e.touches[0];
           const targetCell = document.elementFromPoint(touch.clientX, touch.clientY);
+          if (!targetCell) return;
           const cell = targetCell.closest('.nare-cell');
 
           if (cell && !selectedCells.includes(cell)) {
@@ -830,7 +781,6 @@ function highlightWorkingHours() {
       calendarBody.addEventListener('touchend', () => {
           touchSelectionActive = false;
       });
-      // *** End Touch Event Listeners ***
 
       printBtn.addEventListener("click", () => window.print());
 
@@ -841,16 +791,13 @@ function highlightWorkingHours() {
         seasonSelect.value = today.season;
         monthSelect.value = today.month;
         
-        // Re-create calendar for the new date, which will also load its data and highlight working hours
         createCalendar(); 
         
-        // Clear previous highlight
         if(currentHighlight) {
             currentHighlight.row.classList.remove('today-highlight');
             currentHighlight.nareCell.classList.remove('today-highlight-nare');
         }
         
-        // Highlight the new 'today'
         const todayRow = calendarBody.querySelector(`tr[data-day-row='${today.day}']`);
         const todayNareCell = todayRow ? todayRow.querySelector(`.nare-cell[data-day='${today.day}'][data-nare='${today.nare}']`) : null;
 
@@ -862,7 +809,6 @@ function highlightWorkingHours() {
         }
       });
 
-      // --- Initialization ---
       function populateSelects() {
           for (let y = 0; y <= 100; y++) {
             const opt = document.createElement("option");
@@ -890,7 +836,6 @@ function highlightWorkingHours() {
           monthSelect.addEventListener('change', handleDropdownChange);
       }
       
-      // --- New: Import/Export Functions ---
       function getAllCalendarData() {
           const data = {};
           for (let i = 0; i < localStorage.length; i++) {
@@ -930,20 +875,15 @@ function highlightWorkingHours() {
                 const importedData = JSON.parse(e.target.result);
                 let changesMade = false;
 
-                // Iterate through the keys in the imported data
                 for (const key in importedData) {
                     if (key.startsWith('sidereal-calendar-')) {
                         const importedMonthData = JSON.parse(importedData[key]);
                         const existingMonthDataString = localStorage.getItem(key);
 
                         if (existingMonthDataString) {
-                            // Data exists for this month, so merge
                             const existingMonthData = JSON.parse(existingMonthDataString);
-
-                            // Merge wholeDay data
                             Object.assign(existingMonthData.wholeDay, importedMonthData.wholeDay);
 
-                            // Merge nare data (deep merge)
                             for (const day in importedMonthData.nares) {
                                 if (!existingMonthData.nares[day]) {
                                     existingMonthData.nares[day] = {};
@@ -954,7 +894,6 @@ function highlightWorkingHours() {
                             localStorage.setItem(key, JSON.stringify(existingMonthData));
                             changesMade = true;
                         } else {
-                            // No existing data, so just add the new data
                             localStorage.setItem(key, importedData[key]);
                             changesMade = true;
                         }
@@ -963,7 +902,7 @@ function highlightWorkingHours() {
 
                 if (changesMade) {
                     alert('Calendar data merged successfully!');
-                    loadData(); // Reload the calendar to show the merged data
+                    loadData(); 
                 } else {
                     alert('No new calendar data was found to merge.');
                 }
@@ -975,17 +914,13 @@ function highlightWorkingHours() {
         reader.readAsText(file);
     }
 
-      // Add event listeners for new buttons
       exportBtn.addEventListener('click', exportData);
-      importBtn.addEventListener('click', () => fileInput.click()); // Trigger the hidden file input
+      importBtn.addEventListener('click', () => fileInput.click()); 
       fileInput.addEventListener('change', importData);
-      // --- End New: Import/Export Functions ---
 
       populateSelects();
       createCalendar();
 	  
-	        
-      // *** PWA Service Worker Registration ***
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').then(() => {
           console.log('Service Worker Registered for Calendar');
@@ -993,8 +928,6 @@ function highlightWorkingHours() {
           console.error('Service Worker Registration Failed:', error);
         });
       }
-      // *** End PWA Service Worker Registration ***
-
     });
   </script>
 </body>
