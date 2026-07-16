@@ -1,10 +1,9 @@
 const CACHE_NAME = 'sidereal-calendar-v1';
 const ASSETS = [
-  './',
-  './index.html',
-  './app.js',
-  './styles.css',
-  './manifest.json',
+  '',
+  'index.html',
+  'app.js',
+  'styles.css',
   'https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css'
 ];
 
