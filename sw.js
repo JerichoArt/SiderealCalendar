@@ -1,53 +1,41 @@
-const CACHE_NAME = 'sidereal-calendar-v2'; // Incremented to bust old cache
-const urlsToCache = [
-  './', // Caches the root (index.html)
-  'index.html',
-  'app.js',       // Added: Essential for offline logic
-  'style.css',    // Added: Essential for offline styling
-  'manifest.json',
-  'sw.js',
+const CACHE_NAME = 'sidereal-calendar-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './app.js',
+  './styles.css',
+  './manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css'
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', // Added: Prevents offline script load failure
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap', // Caches Google Fonts CSS
-  'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMwwnxmr-Ew.woff2', // Caches specific Inter font file
-  'icon-192x192.png', // Caches your icons
-  'icon-512x512.png'   // Caches your icons
 ];
 
+// Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('Caching shell assets');
+      return cache.addAll(ASSETS);
+    })
   );
 });
 
+// Activate Event
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      );
+    })
+  );
+});
+
+// Fetch Event
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
+    caches.match(event.request).then((cachedResponse) => {
+      return cachedResponse || fetch(event.request);
     })
   );
 });
