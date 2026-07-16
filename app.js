@@ -392,29 +392,30 @@ document.addEventListener("DOMContentLoaded", function () {
     roomStatus.textContent = `Verifying credentials...`;
     roomStatus.style.color = "#df8a14";
 
-    // Verify the password against the secure 'rooms' table
-    const { data: roomData, error: roomError } = await supabase
-      .from('rooms')
-      .select('password')
-      .eq('room_id', roomName)
-      .single();
+    // Call our secure database function instead of selecting the password column
+    const { data: isValid, error: roomError } = await supabase
+      .rpc('verify_room_password', {
+        target_room_id: roomName,
+        target_password: roomPassword
+      });
 
-    if (roomError || !roomData) {
-      alert("Room not found. Please check the Room Name.");
+    if (roomError) {
+      console.error("Verification error:", roomError);
+      alert("An error occurred during verification.");
       roomStatus.textContent = "Offline Mode";
       roomStatus.style.color = "#718096";
       return;
     }
 
-    // Check if the password matches what is stored in Supabase
-    if (roomData.password !== roomPassword) {
-      alert("Incorrect password. Access denied.");
+    // If the database returns false, the password/room was incorrect
+    if (!isValid) {
+      alert("Incorrect Room Name or Password.");
       roomStatus.textContent = "Offline Mode";
       roomStatus.style.color = "#718096";
       return;
     }
 
-    // Success! Password matches.
+    // Success! Credentials verified securely.
     currentRoom = roomName;
     roomStatus.textContent = `Connecting to [${currentRoom.toUpperCase()}]...`;
     roomStatus.style.color = "#3b82f6";
@@ -451,8 +452,7 @@ document.addEventListener("DOMContentLoaded", function () {
           roomStatus.style.color = "#10b981";
         }
       });
-  }
-  
+  }  
   async function loadSharedData() {
     if (!currentRoom || !supabase) return;
 
