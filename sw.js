@@ -4,7 +4,7 @@ const ASSETS = [
   'index.html',
   'app.js',
   'styles.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css'
+  'https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/dist/tailwind.min.css''
 ];
 
 // Install Event
