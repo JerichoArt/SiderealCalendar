@@ -1,12 +1,15 @@
-const CACHE_NAME = 'sidereal-calendar-v1';
+const CACHE_NAME = 'sidereal-calendar-v2'; // Incremented to bust old cache
 const urlsToCache = [
   './', // Caches the root (index.html)
   'index.html',
+  'app.js',       // Added: Essential for offline logic
+  'style.css',    // Added: Essential for offline styling
   'manifest.json',
   'sw.js',
   'https://cdn.tailwindcss.com', // Caches Tailwind CSS
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', // Added: Prevents offline script load failure
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap', // Caches Google Fonts CSS
-  'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMwwnxmr-Ew.woff2', // Example: Caches a specific Inter font file (adjust if needed)
+  'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMwwnxmr-Ew.woff2', // Caches specific Inter font file
   'icon-192x192.png', // Caches your icons
   'icon-512x512.png'   // Caches your icons
 ];
