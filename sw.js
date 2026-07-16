@@ -6,7 +6,7 @@ const urlsToCache = [
   'style.css',    // Added: Essential for offline styling
   'manifest.json',
   'sw.js',
-  'https://cdn.tailwindcss.com', // Caches Tailwind CSS
+  'https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css'
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2', // Added: Prevents offline script load failure
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap', // Caches Google Fonts CSS
   'https://fonts.gstatic.com/s/inter/v13/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMwwnxmr-Ew.woff2', // Caches specific Inter font file
