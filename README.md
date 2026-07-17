@@ -17,7 +17,8 @@ This project is a Progressive Web Application (PWA) that presents a unique calen
   * **Shared Pane (Bottom):** A real-time synchronized field for collaborative schedules.
 * **Secured Multi-user Room Sync:** Connect with team members using custom Room Names and passwords. When connected, the shared inputs unlock and sync instantly across all active users using real-time database hooks.
 * **Smart Arrow Navigation:** Easily cycle page-by-page through your calendar using intuitive left (<-) and right (->) arrow buttons right next to the Month selector. The navigation automatically handles rolling multi-tier boundaries—incrementing or decrementing seasons and years gracefully when you pass the first or last month.
-* **Dynamic Astronomical Overlays:** Integrates `SunCalc` API logic using geolocation to calculate and project real-time sunrise and sunset positions directly into your schedule as custom SVG Sun and Moon icons, alongside automatic highlighting for localized working hours (09:00 to 17:00 Gregorian).
+* **Globally Adaptive Astronomical Overlays:** Integrates `SunCalc` API logic with an interactive coordinates system. Clicking the location action button provides upfront guidance before opening browser location alerts, prompting you to either auto-detect via GPS or directly type in manual coordinate decimals (e.g., via `latlong.net`). Calculates and projects precise local sunrise and sunset positions anywhere on Earth as custom SVG Sun and Moon icons.
+* **Nomadic Working Hours Toggle:** Includes a **"Lock work hours to UK"** checkbox preference. When unchecked, your standard 9-to-5 working envelope dynamically recalculates and shifts to mirror the true solar day of your active coordinate longitude (ideal for tracking local schedules). When checked, it anchors your 9-to-5 business hours strictly to the UK/Home base timeline (ideal for remote workers reporting back to a domestic team). 
 * **Gregorian to Sidereal Conversion:** Input any Gregorian date and time (DD/MM/YYYY HH:MM) to instantly jump to its corresponding Sidereal date, with the display output cleanly rendering your custom Greek seasons (e.g., *Season Γ (Gamma)*).
 * **Real-time Sidereal Display:** Hover over or click on any "Hour" cell to see its corresponding real-world Gregorian date and time window displayed instantly in the control box.
 * **Data Persistence:** All personal (Local) calendar data is automatically saved in your browser's local storage, ensuring your entries are retained between sessions.
@@ -34,14 +35,18 @@ This project is a Progressive Web Application (PWA) that presents a unique calen
 
 1. **Open the Calendar:** Simply open the `index.html` file in a web browser, or launch it from your pinned taskbar application shortcut.
 2. **Navigate:** Click the <- and -> buttons flanking the Month dropdown to page fluidly through months, seasons, and years, or use the dropdowns to jump directly to a target block.
-3. **Use Local Calendar:** Click on any "Local..." input (top half of an hour cell) or "Whole Day" cell to type notes. Your changes save instantly to your browser's local storage.
-4. **Connect to a Shared Room:** 
+3. **Set Your Location Profile:** 
+   * Click the **📍 Location Button** in the main control panel.
+   * Read the context indicator popup: click **Allow** on the native browser window to auto-sync with your current device GPS coordinates, or choose **Never Allow / Block** to paste custom coordinates manually.
+   * Toggle the **Lock work hours to UK** option to choose whether your highlighted 9-to-5 frame moves with your coordinates or anchors strictly back to home time.
+4. **Use Local Calendar:** Click on any "Local..." input (top half of an hour cell) or "Whole Day" cell to type notes. Your changes save instantly to your browser's local storage.
+5. **Connect to a Shared Room:** 
    * Enter your shared **Room Name** and **Password** in the top-right control bar.
    * Click **Join Room**.
    * Once successfully authenticated, the bottom half of the hour cells ("Shared...") will unlock.
    * Typing inside a shared cell instantly updates the database and broadcasts the edits to any other connected clients viewing that room in real-time.
-5. **Go to Date:** Enter a target into the "Go to:" field using the `DD/MM/YYYY HH:MM` format and click "Go" to scroll the calendar automatically to those calculated sidereal coordinates.
-6. **Import/Export:** Use **Export Data** at the bottom of the page to securely back up your local calendar logs, or use **Import Data** to merge a previously saved configuration file.
+6. **Go to Date:** Enter a target into the "Go to:" field using the `DD/MM/YYYY HH:MM` format and click "Go" to scroll the calendar automatically to those calculated sidereal coordinates.
+7. **Import/Export:** Use **Export Data** at the bottom of the page to securely back up your local calendar logs, or use **Import Data** to merge a previously saved configuration file.
 
 ---
 
@@ -61,4 +66,4 @@ This project is a Progressive Web Application (PWA) that presents a unique calen
 * **Tailwind CSS:** Manages sleek interface styling and flexible layout configurations.
 * **Supabase Client SDK:** Leverages Postgres database channels and subscription engines to handle real-time room streaming and secure credential matches.
 * **SunCalc API:** Leverages deep astronomical computation rules to align Gregorian solar positions into the internal Sidereal decimal matrix.
-* **Local Storage:** Manages direct, secure client-side browser file persistence for personal data (no server required).
+* **Local Storage:** Manages direct, secure client-side browser file persistence for personal data, alongside user coordinate profiles and timezone state locks.
