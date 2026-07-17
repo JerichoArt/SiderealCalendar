@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const exportBtn = document.getElementById("export-btn");
   const importBtn = document.getElementById("import-btn");
   const fileInput = document.getElementById("file-input");
+  const lockHomeTimeCheckbox = document.getElementById("lock-home-time");
 
   // Room UI Elements
   const roomInput = document.getElementById("room-input");
@@ -569,6 +570,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const currentSeasonIndex = parseInt(seasonSelect.value);
       const currentMonthIndex = parseInt(monthSelect.value);
 
+      // Check if user wants to force UK business hours regardless of location
+      const lockToUK = lockHomeTimeCheckbox ? lockHomeTimeCheckbox.checked : false;
+
       // 15 degrees of longitude matches 1 hour of physical timezone movement
       const targetTimezoneOffsetHours = MY_LONG / 15;
 
@@ -607,12 +611,25 @@ document.addEventListener("DOMContentLoaded", function () {
               const nareStartTime = gregorianNareStart.getTime();
               const nareEndTime = nareStartTime + (SECONDS_PER_NARE_REAL * 1000);
 
-              // Convert standard UTC hours directly to the targeted tracking coordinates
-              const startLocalHour = (gregorianNareStart.getUTCHours() + (gregorianNareStart.getUTCMinutes() / 60) + targetTimezoneOffsetHours + 24) % 24;
-              const endLocalHour = (startLocalHour + (SECONDS_PER_NARE_REAL / 3600)) % 24;
+              let isWorkingHours = false;
 
-              // Check if this nare falls in the local coordinates standard 9-to-5 working frame
-              const isWorkingHours = (startLocalHour >= 9 && startLocalHour < 17) || (endLocalHour > 9 && endLocalHour <= 17);
+              if (lockToUK) {
+                  // --- MODE A: Lock to UK Home Time (Original code logic) ---
+                  const nareLocalYear = gregorianNareStart.getFullYear();
+                  const nareLocalMonth = gregorianNareStart.getMonth();
+                  const nareLocalDay = gregorianNareStart.getDate();
+                  const workingHoursStart = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 9, 0, 0).getTime();
+                  const workingHoursEnd = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 17, 0, 0).getTime();
+
+                  isWorkingHours = (nareEndTime > workingHoursStart) && (nareStartTime < workingHoursEnd);
+              } else {
+                  // --- MODE B: Adapt to true local coordinate time ---
+                  const startLocalHour = (gregorianNareStart.getUTCHours() + (gregorianNareStart.getUTCMinutes() / 60) + targetTimezoneOffsetHours + 24) % 24;
+                  const endLocalHour = (startLocalHour + (SECONDS_PER_NARE_REAL / 3600)) % 24;
+
+                  isWorkingHours = (startLocalHour >= 9 && startLocalHour < 17) || (endLocalHour > 9 && endLocalHour <= 17);
+              }
+
               if (isWorkingHours) {
                   cell.classList.add('nare-working-hours');
               }
@@ -627,7 +644,6 @@ document.addEventListener("DOMContentLoaded", function () {
           });
       });
   }
-
   function handleDropdownChange() {
     createCalendar(); 
   }
@@ -677,8 +693,16 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // --- Dynamic Location Events ---
+ // --- Dynamic Location Events ---
   if (locationBtn) {
     locationBtn.addEventListener("click", () => {
+      // 1. Give the user clear instructions BEFORE the browser pops up its window
+      alert(
+        "📍 Location Settings:\n\n" +
+        "• To use your device's GPS, choose 'Allow' on the next screen.\n" +
+        "• To input coordinates manually, choose 'Never Allow' (or Block)."
+      );
+
       if ("geolocation" in navigator) {
         locationDisplay.textContent = "Detecting...";
         navigator.geolocation.getCurrentPosition(
@@ -688,8 +712,11 @@ document.addEventListener("DOMContentLoaded", function () {
             updateLocation(lat, long);
           },
           (error) => {
+            // 2. This triggers instantly if they clicked "Never Allow" or X
             const manualCoords = prompt(
-              "GPS Blocked/Unavailable.\nEnter location manually as 'latitude, longitude'\n(Example: 51.51, -0.13 for London)\n\nLook up decimal values on latlong.net."
+              "Enter location manually as 'latitude, longitude'\n" +
+              "(Example: 51.51, -0.13 for London)\n\n" +
+              "Look up decimal values on latlong.net."
             );
             if (manualCoords) {
               const parts = manualCoords.split(',');
@@ -714,6 +741,16 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         alert("Geolocation is not supported by this browser.");
       }
+    });
+  }
+  
+  if (lockHomeTimeCheckbox) {
+    // Load preference from memory if it exists
+    lockHomeTimeCheckbox.checked = localStorage.getItem('lock_to_uk') === 'true';
+    
+    lockHomeTimeCheckbox.addEventListener("change", () => {
+      localStorage.setItem('lock_to_uk', lockHomeTimeCheckbox.checked);
+      highlightWorkingHours(); // Re-render highlights instantly
     });
   }
 
