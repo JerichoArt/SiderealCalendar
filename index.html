@@ -46,9 +46,18 @@
           <button id="today-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
 
 <!-- Dynamic Location Button -->
-<button id="location-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm flex items-center gap-1">
-  <span>📍</span> <span id="location-display">0.00° N, 0.00° E</span>
-</button>
+<div class="flex items-center gap-3 flex-wrap">
+  <!-- Dynamic Location Button -->
+  <button id="location-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm flex items-center gap-1">
+    <span>📍</span> <span id="location-display">0.00° N, 0.00° E</span>
+  </button>
+
+  <!-- Lock Time Zone Toggle -->
+  <label class="flex items-center gap-1 text-sm font-medium text-gray-700 select-none cursor-pointer">
+    <input type="checkbox" id="lock-home-time" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+    <span>Lock work hours to UK</span>
+  </label>
+</div>
 		  
         <!-- Room Sync Controls -->
         <div id="room-controls" style="display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; padding-left: 10px; border-left: 2px solid #e2e8f0;">
