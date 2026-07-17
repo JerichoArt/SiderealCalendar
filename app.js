@@ -696,52 +696,64 @@ document.addEventListener("DOMContentLoaded", function () {
  // --- Dynamic Location Events ---
   if (locationBtn) {
     locationBtn.addEventListener("click", () => {
-      // 1. Give the user clear instructions BEFORE the browser pops up its window
-      alert(
-        "📍 Location Settings:\n\n" +
-        "• To use your device's GPS, choose 'Allow' on the next screen.\n" +
-        "• To input coordinates manually, choose 'Never Allow' (or Block)."
+      // 1. Use a confirm box so they have an immediate manual choice
+      const useGPS = confirm(
+        "📍 Update Location Settings:\n\n" +
+        "• Click 'OK' to auto-detect using your device's GPS.\n" +
+        "• Click 'Cancel' to input your coordinates manually."
       );
 
-      if ("geolocation" in navigator) {
-        locationDisplay.textContent = "Detecting...";
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const lat = position.coords.latitude;
-            const long = position.coords.longitude;
-            updateLocation(lat, long);
-          },
-          (error) => {
-            // 2. This triggers instantly if they clicked "Never Allow" or X
-            const manualCoords = prompt(
-              "Enter location manually as 'latitude, longitude'\n" +
-              "(Example: 51.51, -0.13 for London)\n\n" +
-              "Look up decimal values on latlong.net."
-            );
-            if (manualCoords) {
-              const parts = manualCoords.split(',');
-              if (parts.length === 2) {
-                const lat = parseFloat(parts[0].trim());
-                const long = parseFloat(parts[1].trim());
-                if (!isNaN(lat) && !isNaN(long)) {
-                  updateLocation(lat, long);
-                } else {
-                  alert("Invalid numbers entered.");
-                  updateLocationUI();
-                }
-              } else {
-                alert("Incorrect format. Please use 'latitude, longitude'.");
-                updateLocationUI();
-              }
-            } else {
-              updateLocationUI();
+      if (useGPS) {
+        // Option A: GPS Auto-Detect
+        if ("geolocation" in navigator) {
+          locationDisplay.textContent = "Detecting...";
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const lat = position.coords.latitude;
+              const long = position.coords.longitude;
+              updateLocation(lat, long);
+            },
+            (error) => {
+              alert("GPS detection failed or was blocked. Switching to manual input...");
+              promptForManualInput();
             }
-          }
-        );
+          );
+        } else {
+          alert("Geolocation is not supported by this browser.");
+          promptForManualInput();
+        }
       } else {
-        alert("Geolocation is not supported by this browser.");
+        // Option B: User chose Cancel upfront, jump straight to typing
+        promptForManualInput();
       }
     });
+  }
+
+  // Helper function to keep code clean
+  function promptForManualInput() {
+    const manualCoords = prompt(
+      "Enter location manually as 'latitude, longitude'\n" +
+      "(Example: 51.51, -0.13 for London)\n\n" +
+      "Look up decimal values on latlong.net."
+    );
+    if (manualCoords) {
+      const parts = manualCoords.split(',');
+      if (parts.length === 2) {
+        const lat = parseFloat(parts[0].trim());
+        const long = parseFloat(parts[1].trim());
+        if (!isNaN(lat) && !isNaN(long)) {
+          updateLocation(lat, long);
+        } else {
+          alert("Invalid numbers entered.");
+          updateLocationUI();
+        }
+      } else {
+        alert("Incorrect format. Please use 'latitude, longitude'.");
+        updateLocationUI();
+      }
+    } else {
+      updateLocationUI();
+    }
   }
   
   if (lockHomeTimeCheckbox) {
