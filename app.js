@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // --- DOM Elements ---
   const calendarBody = document.getElementById("calendar-body");
-  const printBtn = document.getElementById("print-btn");
   const todayBtn = document.getElementById("today-btn");
   const yearSelect = document.getElementById("year-select");
   const seasonSelect = document.getElementById("season-select");
@@ -22,6 +21,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const roomInput = document.getElementById("room-input");
   const joinRoomBtn = document.getElementById("join-room-btn");
   const roomStatus = document.getElementById("room-status");
+
+  // Location UI Elements
+  const locationBtn = document.getElementById("location-btn");
+  const locationDisplay = document.getElementById("location-display");
 
   // --- Calendar & Clock Constants ---
   const DAYS_IN_MONTH = 50;
@@ -36,8 +39,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const PING_LENGTH = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY * DINS_PER_NARE * SECS_PER_DIN * PINGS_PER_SEC);
   const SECONDS_PER_NARE_REAL = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY);
 
-  const MY_LAT = 51.5074; 
-  const MY_LONG = -0.1278;
+  // --- Dynamic Location Coordinates ---
+  let MY_LAT = parseFloat(localStorage.getItem('user_lat')) || 51.5074; 
+  let MY_LONG = parseFloat(localStorage.getItem('user_long')) || -0.1278;
+
+  function updateLocationUI() {
+    if (locationDisplay) {
+      const latStr = `${Math.abs(MY_LAT).toFixed(2)}° ${MY_LAT >= 0 ? 'N' : 'S'}`;
+      const longStr = `${Math.abs(MY_LONG).toFixed(2)}° ${MY_LONG >= 0 ? 'E' : 'W'}`;
+      locationDisplay.textContent = `${latStr}, ${longStr}`;
+    }
+  }
+
+  function updateLocation(lat, long) {
+    MY_LAT = parseFloat(lat);
+    MY_LONG = parseFloat(long);
+    localStorage.setItem('user_lat', MY_LAT);
+    localStorage.setItem('user_long', MY_LONG);
+    updateLocationUI();
+    highlightWorkingHours(); 
+  }
 
   const SUN_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="orange" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/></svg>`;
   const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
@@ -194,14 +215,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  goToBtn.addEventListener('click', executeGoToDate);
+  if (goToBtn) {
+    goToBtn.addEventListener('click', executeGoToDate);
+  }
 
-  datetimeInput.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      executeGoToDate();
-    }
-  });
+  if (datetimeInput) {
+    datetimeInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        executeGoToDate();
+      }
+    });
+  }
 
   function getSiderealDate() {
     const elapsed = (Date.now() - EPOCH.getTime()) / 1000; 
@@ -302,7 +327,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const localPane = cell.querySelector('.nare-pane-local');
         if (localPane) {
-          // Backward compatible check for older nested or flat local storage objects
           localPane.innerHTML = (cellData && typeof cellData === 'object' ? cellData.content : cellData) || '';
         }
       }
@@ -392,7 +416,6 @@ document.addEventListener("DOMContentLoaded", function () {
     roomStatus.textContent = `Verifying credentials...`;
     roomStatus.style.color = "#df8a14";
 
-    // Call our secure database function instead of selecting the password column
     const { data: isValid, error: roomError } = await supabase
       .rpc('verify_room_password', {
         target_room_id: roomName,
@@ -407,7 +430,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // If the database returns false, the password/room was incorrect
     if (!isValid) {
       alert("Incorrect Room Name or Password.");
       roomStatus.textContent = "Offline Mode";
@@ -415,23 +437,17 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Success! Credentials verified securely.
     currentRoom = roomName;
     roomStatus.textContent = `Connecting to [${currentRoom.toUpperCase()}]...`;
     roomStatus.style.color = "#3b82f6";
 
-    // Clean up any existing subscriptions
     if (supabaseSubscription) {
       supabase.removeChannel(supabaseSubscription);
     }
 
-    // Rebuild calendar to unlock the shared inputs now that we are authenticated
     createCalendar();
-
-    // Load current values
     await loadSharedData();
 
-    // Subscribe to real-time changes
     supabaseSubscription = supabase
       .channel('public:shared_calendar_cells')
       .on(
@@ -473,12 +489,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Reset shared inputs to empty
     document.querySelectorAll('.nare-pane-shared').forEach(pane => {
       pane.innerHTML = '';
     });
 
-    // Populate database entries
     data.forEach(row => {
       const sharedPane = document.querySelector(`.nare-pane-shared[data-day="${row.day}"][data-nare="${row.nare}"]`);
       if (sharedPane) {
@@ -520,7 +534,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetRecord = newRecord && Object.keys(newRecord).length > 0 ? newRecord : oldRecord;
     if (!targetRecord) return;
 
-    // Verify it belongs on the currently visible calendar page
     if (
       targetRecord.year !== parseInt(yearSelect.value) ||
       targetRecord.season !== parseInt(seasonSelect.value) ||
@@ -531,19 +544,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const sharedPane = document.querySelector(`.nare-pane-shared[data-day="${targetRecord.day}"][data-nare="${targetRecord.nare}"]`);
     if (sharedPane) {
-      // Check if it's currently focused to avoid shifting the user's cursor while typing
       if (document.activeElement !== sharedPane) {
         sharedPane.innerHTML = targetRecord.content || '';
       }
     }
   }
 
-  joinRoomBtn.addEventListener("click", handleRoomConnection);
-  roomInput.addEventListener("keydown", (e) => {
-    if (e.key === 'Enter') {
-      handleRoomConnection();
-    }
-  });
+  if (joinRoomBtn) {
+    joinRoomBtn.addEventListener("click", handleRoomConnection);
+  }
+  if (roomInput) {
+    roomInput.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        handleRoomConnection();
+      }
+    });
+  }
 
   // --- End Shared Supabase Logic ---
 
@@ -552,6 +568,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const currentSiderealYear = parseInt(yearSelect.value);
       const currentSeasonIndex = parseInt(seasonSelect.value);
       const currentMonthIndex = parseInt(monthSelect.value);
+
+      // 15 degrees of longitude matches 1 hour of physical timezone movement
+      const targetTimezoneOffsetHours = MY_LONG / 15;
 
       rows.forEach(row => {
           const siderealDayInMonth = parseInt(row.dataset.dayRow);
@@ -584,16 +603,16 @@ document.addEventListener("DOMContentLoaded", function () {
                   siderealDayInMonth,
                   nareNumber
               );
+              
               const nareStartTime = gregorianNareStart.getTime();
               const nareEndTime = nareStartTime + (SECONDS_PER_NARE_REAL * 1000);
 
-              const nareLocalYear = gregorianNareStart.getFullYear();
-              const nareLocalMonth = gregorianNareStart.getMonth();
-              const nareLocalDay = gregorianNareStart.getDate();
-              const workingHoursStart = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 9, 0, 0).getTime();
-              const workingHoursEnd = new Date(nareLocalYear, nareLocalMonth, nareLocalDay, 17, 0, 0).getTime();
+              // Convert standard UTC hours directly to the targeted tracking coordinates
+              const startLocalHour = (gregorianNareStart.getUTCHours() + (gregorianNareStart.getUTCMinutes() / 60) + targetTimezoneOffsetHours + 24) % 24;
+              const endLocalHour = (startLocalHour + (SECONDS_PER_NARE_REAL / 3600)) % 24;
 
-              const isWorkingHours = (nareEndTime > workingHoursStart) && (nareStartTime < workingHoursEnd);
+              // Check if this nare falls in the local coordinates standard 9-to-5 working frame
+              const isWorkingHours = (startLocalHour >= 9 && startLocalHour < 17) || (endLocalHour > 9 && endLocalHour <= 17);
               if (isWorkingHours) {
                   cell.classList.add('nare-working-hours');
               }
@@ -636,13 +655,6 @@ document.addEventListener("DOMContentLoaded", function () {
       nareDisplayOutput.textContent = `${gregorianNareStart.toLocaleDateString()} ${gregorianNareStart.toLocaleTimeString()} to ${gregorianNareEnd.toLocaleTimeString()}`;
   });
 
-  printBtn.addEventListener("click", () => {
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
-    window.print();
-  });
-
   todayBtn.addEventListener("click", () => {
     const today = getSiderealDate();
     
@@ -663,6 +675,47 @@ document.addEventListener("DOMContentLoaded", function () {
         currentHighlight = { row: todayRow, nareCell: todayNareCell };
     }
   });
+
+  // --- Dynamic Location Events ---
+  if (locationBtn) {
+    locationBtn.addEventListener("click", () => {
+      if ("geolocation" in navigator) {
+        locationDisplay.textContent = "Detecting...";
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const long = position.coords.longitude;
+            updateLocation(lat, long);
+          },
+          (error) => {
+            const manualCoords = prompt(
+              "GPS Blocked/Unavailable.\nEnter location manually as 'latitude, longitude'\n(Example: 51.51, -0.13 for London)\n\nLook up decimal values on latlong.net."
+            );
+            if (manualCoords) {
+              const parts = manualCoords.split(',');
+              if (parts.length === 2) {
+                const lat = parseFloat(parts[0].trim());
+                const long = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(long)) {
+                  updateLocation(lat, long);
+                } else {
+                  alert("Invalid numbers entered.");
+                  updateLocationUI();
+                }
+              } else {
+                alert("Incorrect format. Please use 'latitude, longitude'.");
+                updateLocationUI();
+              }
+            } else {
+              updateLocationUI();
+            }
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    });
+  }
 
   function populateSelects() {
       for (let y = 0; y <= 100; y++) {
@@ -693,65 +746,69 @@ document.addEventListener("DOMContentLoaded", function () {
       const prevBtn = document.getElementById("prev-month-btn");
       const nextBtn = document.getElementById("next-month-btn");
 
-      nextBtn.addEventListener("click", () => {
-        let currentMonth = parseInt(monthSelect.value);
-        let currentSeason = parseInt(seasonSelect.value);
-        let currentYear = parseInt(yearSelect.value);
+      if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+          let currentMonth = parseInt(monthSelect.value);
+          let currentSeason = parseInt(seasonSelect.value);
+          let currentYear = parseInt(yearSelect.value);
 
-        currentMonth++; 
+          currentMonth++; 
 
-        if (currentMonth > 4) { 
-          currentMonth = 0;    
-          currentSeason++;     
+          if (currentMonth > 4) { 
+            currentMonth = 0;    
+            currentSeason++;     
 
-          if (currentSeason > 3) { 
-            currentSeason = 0;     
-            currentYear++;         
+            if (currentSeason > 3) { 
+              currentSeason = 0;     
+              currentYear++;         
 
-            if (currentYear > 100) {
-              currentYear = 100; 
-              currentSeason = 3; 
-              currentMonth = 4;
-              return; 
+              if (currentYear > 100) {
+                currentYear = 100; 
+                currentSeason = 3; 
+                currentMonth = 4;
+                return; 
+              }
             }
           }
-        }
 
-        yearSelect.value = currentYear;
-        seasonSelect.value = currentSeason;
-        monthSelect.value = currentMonth;
-        createCalendar();
-      });
+          yearSelect.value = currentYear;
+          seasonSelect.value = currentSeason;
+          monthSelect.value = currentMonth;
+          createCalendar();
+        });
+      }
 
-      prevBtn.addEventListener("click", () => {
-        let currentMonth = parseInt(monthSelect.value);
-        let currentSeason = parseInt(seasonSelect.value);
-        let currentYear = parseInt(yearSelect.value);
+      if (prevBtn) {
+        prevBtn.addEventListener("click", () => {
+          let currentMonth = parseInt(monthSelect.value);
+          let currentSeason = parseInt(seasonSelect.value);
+          let currentYear = parseInt(yearSelect.value);
 
-        currentMonth--; 
+          currentMonth--; 
 
-        if (currentMonth < 0) {
-          currentMonth = 4;    
-          currentSeason--;     
+          if (currentMonth < 0) {
+            currentMonth = 4;    
+            currentSeason--;     
 
-          if (currentSeason < 0) {
-            currentSeason = 3;     
-            currentYear--;         
+            if (currentSeason < 0) {
+              currentSeason = 3;     
+              currentYear--;         
 
-            if (currentYear < 0) {
-              currentYear = 0; 
-              currentSeason = 0;
-              currentMonth = 0;
-              return; 
+              if (currentYear < 0) {
+                currentYear = 0; 
+                currentSeason = 0;
+                currentMonth = 0;
+                return; 
+              }
             }
           }
-        }
 
-        yearSelect.value = currentYear;
-        seasonSelect.value = currentSeason;
-        monthSelect.value = currentMonth;
-        createCalendar();
-      });
+          yearSelect.value = currentYear;
+          seasonSelect.value = currentSeason;
+          monthSelect.value = currentMonth;
+          createCalendar();
+        });
+      }
   }
   
   function getAllCalendarData() {
@@ -832,10 +889,12 @@ document.addEventListener("DOMContentLoaded", function () {
     reader.readAsText(file);
 }
 
-  exportBtn.addEventListener('click', exportData);
-  importBtn.addEventListener('click', () => fileInput.click()); 
-  fileInput.addEventListener('change', importData);
+  if (exportBtn) exportBtn.addEventListener('click', exportData);
+  if (importBtn) importBtn.addEventListener('click', () => fileInput.click()); 
+  if (fileInput) fileInput.addEventListener('change', importData);
 
+  // Initialize UI Coordinates & Populate Controls
+  updateLocationUI();
   populateSelects();
   createCalendar();
   
