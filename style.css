@@ -126,6 +126,11 @@ button:active {
     transform: scale(0.98);
 }
 
+/* Custom Fix for Inline-Styled Join Room Button Hover State */
+#join-room-btn:hover {
+  background-color: #2563eb !important;
+}
+
 /* Container inside each hour cell to hold both stacked inputs */
 .nare-dual-container {
   display: flex;
@@ -172,113 +177,4 @@ button:active {
 }
 .nare-pane-shared.connected:focus {
   background-color: #f0fdf4; /* Soft green tint on focus */
-}
-
-@media print {
-  /* 1. Reset document tree to plain static flow layout to allow height calculations */
-  html, body, .max-w-7xl, .overflow-x-auto {
-    background: white !important;
-    color: black !important;
-    height: auto !important;
-    min-height: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-    overflow-x: visible !important;
-    overflow-y: visible !important;
-    position: static !important;
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-shadow: none !important;
-  }
-
-  /* 2. Hide all non-printable UI elements */
-  .controls, 
-  #data-controls, 
-  #print-btn, 
-  #today-btn, 
-  #year-select, 
-  #month-select, 
-  #season-select, 
-  #prev-month-btn,
-  #next-month-btn,
-  label,
-  #room-controls {
-    display: none !important;
-  }
-
-  /* 3. Force table to normal printed rendering */
-  table {
-    display: table !important;
-    width: 100% !important;
-    min-width: 100% !important;
-    table-layout: fixed !important;
-    border-collapse: collapse !important;
-    border: 1px solid #000 !important;
-    page-break-inside: auto !important;
-  }
-
-  /* 4. Ensure calendar rows break correctly across print pages */
-  tr {
-    page-break-inside: avoid !important;
-    page-break-after: auto !important;
-    display: table-row !important;
-  }
-
-  th, td {
-    border: 1px solid #aaa !important;
-    padding: 0.4rem !important;
-    font-size: 0.75rem !important;
-    color: black !important;
-    display: table-cell !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* 5. Override nested flex columns to basic layout block components */
-  .nare-dual-container {
-    display: block !important;
-    height: auto !important;
-    min-height: auto !important;
-  }
-
-  .nare-pane-local, .nare-pane-shared {
-    display: block !important;
-    height: auto !important;
-    min-height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-    word-break: break-all !important;
-    color: black !important;
-    border: none !important;
-    padding: 2px 0 !important;
-  }
-
-  /* Create a simple visual separation between local and shared notes during printing */
-  .nare-pane-local {
-    border-bottom: 1px dashed #ddd !important;
-    margin-bottom: 2px !important;
-  }
-
-  /* 6. Fix the table header repeated styling */
-  thead {
-    display: table-header-group !important;
-  }
-
-  thead th {
-    position: static !important;
-    background-color: #f3f4f6 !important;
-    color: black !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* 7. Retain working hours tint */
-  .nare-working-hours {
-    background-color: #f0fdf4 !important;
-    -webkit-print-color-adjust: exact !important; 
-    print-color-adjust: exact !important; 
-  }
 }
