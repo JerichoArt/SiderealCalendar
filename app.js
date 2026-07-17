@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // --- DOM Elements ---
   const calendarBody = document.getElementById("calendar-body");
-  const printBtn = document.getElementById("print-btn");
   const todayBtn = document.getElementById("today-btn");
   const yearSelect = document.getElementById("year-select");
   const seasonSelect = document.getElementById("season-select");
@@ -22,6 +21,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const roomInput = document.getElementById("room-input");
   const joinRoomBtn = document.getElementById("join-room-btn");
   const roomStatus = document.getElementById("room-status");
+
+  // Location UI Elements
+  const locationBtn = document.getElementById("location-btn");
+  const locationDisplay = document.getElementById("location-display");
 
   // --- Calendar & Clock Constants ---
   const DAYS_IN_MONTH = 50;
@@ -36,8 +39,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const PING_LENGTH = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY * DINS_PER_NARE * SECS_PER_DIN * PINGS_PER_SEC);
   const SECONDS_PER_NARE_REAL = SIDEREAL_YEAR_SECS / (DAYS_IN_YEAR * NARES_PER_DAY);
 
-  const MY_LAT = 51.5074; 
-  const MY_LONG = -0.1278;
+  // --- Dynamic Location Coordinates ---
+  let MY_LAT = parseFloat(localStorage.getItem('user_lat')) || 51.5074; 
+  let MY_LONG = parseFloat(localStorage.getItem('user_long')) || -0.1278;
+
+  function updateLocationUI() {
+    if (locationDisplay) {
+      const latStr = `${Math.abs(MY_LAT).toFixed(2)}° ${MY_LAT >= 0 ? 'N' : 'S'}`;
+      const longStr = `${Math.abs(MY_LONG).toFixed(2)}° ${MY_LONG >= 0 ? 'E' : 'W'}`;
+      locationDisplay.textContent = `${latStr}, ${longStr}`;
+    }
+  }
+
+  function updateLocation(lat, long) {
+    MY_LAT = parseFloat(lat);
+    MY_LONG = parseFloat(long);
+    localStorage.setItem('user_lat', MY_LAT);
+    localStorage.setItem('user_long', MY_LONG);
+    updateLocationUI();
+    highlightWorkingHours(); 
+  }
 
   const SUN_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="orange" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/></svg>`;
   const MOON_ICON = `<svg class="celestial-icon" viewBox="0 0 24 24" fill="#4a5568" xmlns="http://www.w3.org/2000/svg"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
@@ -302,7 +323,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const localPane = cell.querySelector('.nare-pane-local');
         if (localPane) {
-          // Backward compatible check for older nested or flat local storage objects
           localPane.innerHTML = (cellData && typeof cellData === 'object' ? cellData.content : cellData) || '';
         }
       }
@@ -392,7 +412,6 @@ document.addEventListener("DOMContentLoaded", function () {
     roomStatus.textContent = `Verifying credentials...`;
     roomStatus.style.color = "#df8a14";
 
-    // Call our secure database function instead of selecting the password column
     const { data: isValid, error: roomError } = await supabase
       .rpc('verify_room_password', {
         target_room_id: roomName,
@@ -407,7 +426,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // If the database returns false, the password/room was incorrect
     if (!isValid) {
       alert("Incorrect Room Name or Password.");
       roomStatus.textContent = "Offline Mode";
@@ -415,23 +433,17 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Success! Credentials verified securely.
     currentRoom = roomName;
     roomStatus.textContent = `Connecting to [${currentRoom.toUpperCase()}]...`;
     roomStatus.style.color = "#3b82f6";
 
-    // Clean up any existing subscriptions
     if (supabaseSubscription) {
       supabase.removeChannel(supabaseSubscription);
     }
 
-    // Rebuild calendar to unlock the shared inputs now that we are authenticated
     createCalendar();
-
-    // Load current values
     await loadSharedData();
 
-    // Subscribe to real-time changes
     supabaseSubscription = supabase
       .channel('public:shared_calendar_cells')
       .on(
@@ -473,12 +485,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // Reset shared inputs to empty
     document.querySelectorAll('.nare-pane-shared').forEach(pane => {
       pane.innerHTML = '';
     });
 
-    // Populate database entries
     data.forEach(row => {
       const sharedPane = document.querySelector(`.nare-pane-shared[data-day="${row.day}"][data-nare="${row.nare}"]`);
       if (sharedPane) {
@@ -520,7 +530,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetRecord = newRecord && Object.keys(newRecord).length > 0 ? newRecord : oldRecord;
     if (!targetRecord) return;
 
-    // Verify it belongs on the currently visible calendar page
     if (
       targetRecord.year !== parseInt(yearSelect.value) ||
       targetRecord.season !== parseInt(seasonSelect.value) ||
@@ -531,7 +540,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const sharedPane = document.querySelector(`.nare-pane-shared[data-day="${targetRecord.day}"][data-nare="${targetRecord.nare}"]`);
     if (sharedPane) {
-      // Check if it's currently focused to avoid shifting the user's cursor while typing
       if (document.activeElement !== sharedPane) {
         sharedPane.innerHTML = targetRecord.content || '';
       }
@@ -636,13 +644,6 @@ document.addEventListener("DOMContentLoaded", function () {
       nareDisplayOutput.textContent = `${gregorianNareStart.toLocaleDateString()} ${gregorianNareStart.toLocaleTimeString()} to ${gregorianNareEnd.toLocaleTimeString()}`;
   });
 
-  printBtn.addEventListener("click", () => {
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
-    window.print();
-  });
-
   todayBtn.addEventListener("click", () => {
     const today = getSiderealDate();
     
@@ -663,6 +664,47 @@ document.addEventListener("DOMContentLoaded", function () {
         currentHighlight = { row: todayRow, nareCell: todayNareCell };
     }
   });
+
+  // --- Dynamic Location Events ---
+  if (locationBtn) {
+    locationBtn.addEventListener("click", () => {
+      if ("geolocation" in navigator) {
+        locationDisplay.textContent = "Detecting...";
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const long = position.coords.longitude;
+            updateLocation(lat, long);
+          },
+          (error) => {
+            const manualCoords = prompt(
+              "GPS Blocked/Unavailable.\nEnter location manually as 'latitude, longitude'\n(Example: 51.51, -0.13 for London)\n\nLook up decimal values on latlong.net."
+            );
+            if (manualCoords) {
+              const parts = manualCoords.split(',');
+              if (parts.length === 2) {
+                const lat = parseFloat(parts[0].trim());
+                const long = parseFloat(parts[1].trim());
+                if (!isNaN(lat) && !isNaN(long)) {
+                  updateLocation(lat, long);
+                } else {
+                  alert("Invalid numbers entered.");
+                  updateLocationUI();
+                }
+              } else {
+                alert("Incorrect format. Please use 'latitude, longitude'.");
+                updateLocationUI();
+              }
+            } else {
+              updateLocationUI();
+            }
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    });
+  }
 
   function populateSelects() {
       for (let y = 0; y <= 100; y++) {
@@ -836,6 +878,8 @@ document.addEventListener("DOMContentLoaded", function () {
   importBtn.addEventListener('click', () => fileInput.click()); 
   fileInput.addEventListener('change', importData);
 
+  // Initialize UI Coordinates & Populate Controls
+  updateLocationUI();
   populateSelects();
   createCalendar();
   
