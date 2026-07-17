@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:,">
   <!-- Our newly separated custom CSS file -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body class="p-4 md:p-6">
   <div class="max-w-7xl mx-auto">
@@ -42,9 +42,13 @@
             <div id="nare-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">
               Click an Hour box
             </div>
-          </div>
-          <button id="print-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Print</button>
-          <button id="today-btn" class="bg-cyan-500 hover:bg-cyan-600 text-gray-800 font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
+          </div>          
+          <button id="today-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
+
+<!-- Dynamic Location Button -->
+<button id="location-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm flex items-center gap-1">
+  <span>📍</span> <span id="location-display">0.00° N, 0.00° E</span>
+</button>
 		  
         <!-- Room Sync Controls -->
         <div id="room-controls" style="display: inline-flex; align-items: center; gap: 8px; margin-left: 10px; padding-left: 10px; border-left: 2px solid #e2e8f0;">
