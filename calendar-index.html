@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sidereal Calendar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="calendar.css?v=3">
+</head>
+<body class="p-4 md:p-6">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4 text-center text-gray-800">Sidereal Calendar</h1>
+
+    <div class="controls flex flex-wrap items-center gap-4 mb-4">
+      <label class="flex items-center gap-2">Year: <select id="year-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
+
+      <label class="flex items-center gap-1">
+        Month:
+        <div class="inline-flex items-center bg-gray-100 rounded border border-gray-300 overflow-hidden">
+          <button id="prev-month-btn" type="button" class="px-2 py-1 bg-white hover:bg-gray-200 border-r border-gray-300 font-bold">&larr;</button>
+          <select id="month-select" class="bg-white px-2 py-1 outline-none"></select>
+          <button id="next-month-btn" type="button" class="px-2 py-1 bg-white hover:bg-gray-200 border-l border-gray-300 font-bold">&rarr;</button>
+        </div>
+      </label>
+      <span id="season-label" class="text-sm font-medium text-gray-600"></span>
+
+      <div class="flex flex-wrap gap-2 w-full lg:w-auto lg:ml-auto justify-center sm:justify-start">
+        <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner">
+          <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
+          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800">
+          <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
+          <div id="hour-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">Click an Hour box</div>
+        </div>
+        <button id="today-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
+
+        <div class="flex items-center gap-3 flex-wrap">
+          <button id="location-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm flex items-center gap-1">
+            <span>📍</span> <span id="location-display">0.00° N, 0.00° E</span>
+          </button>
+          <label class="flex items-center gap-1 text-sm font-medium text-gray-700">Work zone:
+            <select id="work-zone" class="border border-gray-300 rounded px-1 py-1 text-sm max-w-[16rem]"></select>
+          </label>
+          <label class="flex items-center gap-1 text-sm font-medium text-gray-700 select-none cursor-pointer">
+            <input type="checkbox" id="follow-dst" class="rounded border-gray-300 text-blue-600">
+            <span>Follow local daylight saving</span>
+          </label>
+        </div>
+
+        <!-- Rooms: hidden unless rooms.js is switched on -->
+        <div id="room-controls">
+          <span id="practice-badge" class="practice-badge" hidden>Practice mode</span>
+          <input type="text" id="room-input" placeholder="Room Name..." />
+          <input type="password" id="room-password-input" placeholder="Password..." />
+          <button id="join-room-btn" type="button">Join Room</button>
+          <span id="room-status">Offline Mode</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-sm text-gray-600 mb-2">Hours are planet time, the same for everyone. Green hours are your work window, ☀ marks sunrise and ☾ sunset at your location.</p>
+
+    <div class="overflow-x-auto shadow-lg rounded-lg">
+      <table id="calendar-table">
+        <thead>
+          <tr id="header-row-main"></tr>
+          <tr id="header-row-sub"></tr>
+        </thead>
+        <tbody id="calendar-body"></tbody>
+      </table>
+    </div>
+
+    <div id="data-controls" class="flex flex-col md:flex-row gap-4 mt-8 justify-center items-center">
+      <button id="export-btn" class="bg-gray-700 hover:bg-gray-800 text-white font-semibold px-6 py-2 rounded-md shadow-lg">Export Data</button>
+      <button id="import-btn" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md shadow-lg">Import Data</button>
+      <input type="file" id="file-input" accept="application/json" class="hidden">
+    </div>
+  </div>
+
+  <script src="sidereal-core.js"></script>
+  <script src="rooms.js"></script>
+  <script src="calendar.js" defer></script>
+</body>
+</html>

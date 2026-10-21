@@ -1,0 +1,135 @@
+html, body {
+  background-color: #f7fafc;
+  color: #1a202c;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: 1px solid #e2e8f0;
+  background-color: white;
+}
+
+th, td {
+  border: 1px solid #e2e8f0;
+  padding: 0.25rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.controls {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background-color: white;
+}
+
+.overflow-x-auto {
+  max-height: 68vh;
+  overflow-y: auto;
+  overflow-x: auto;
+  position: relative;
+}
+
+thead th {
+  background-color: #edf2f7;
+  text-align: center;
+  font-weight: 500;
+  color: #4a5568;
+  position: sticky;
+}
+#header-row-main th { top: 0; z-index: 25; }
+#header-row-sub th  { top: 28px; z-index: 20; }
+th.day-col { left: 0; z-index: 35 !important; }
+
+/* Day column stays visible while scrolling across the 24 hours */
+.day-number {
+  position: sticky;
+  left: 0;
+  z-index: 15;
+  text-align: center;
+  background-color: #f7fafc;
+}
+.day-number .dn { display: block; font-size: 1.4rem; font-weight: bold; line-height: 1.1; }
+.day-number .wd { display: block; font-size: 0.85rem; color: #718096; }
+.season-badge {
+  display: inline-block;
+  margin-top: 2px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #fff;
+  background: #047857;
+  border-radius: 8px;
+}
+
+tr.week-start td { border-top: 2px solid #cbd5e0; }
+tr.season-start td { border-top: 3px solid #047857; }
+tr.return-row .day-number { background-color: #fef3c7; }
+
+.whole-day-cell { min-height: 50px; }
+.hour-cell { min-height: 90px; overflow-wrap: break-word; position: relative; padding: 0; }
+
+.whole-day-content { min-height: 50px; width: 100%; outline: none; padding: 2px; white-space: pre-wrap; }
+.whole-day-content:focus { box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5); border-radius: 4px; }
+
+.celestial-icon { position: absolute; top: 2px; right: 2px; width: 10px; height: 10px; z-index: 5; pointer-events: none; }
+
+.hour-working { background-color: #d1f7d1; }
+.today-highlight { background-color: #e6f2ea; }
+.today-highlight-hour { background-color: #9ae6b4; }
+
+#hour-display-output {
+  font-size: 0.9rem;
+  color: #1a202c;
+  background-color: #e2e8f0;
+  border: 1px solid #cbd5e0;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+button { transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out; }
+button:active { transform: scale(0.98); }
+
+/* Local (top) and shared (bottom) halves of each hour cell */
+.hour-dual-container { display: flex; flex-direction: column; height: 100%; min-height: 90px; }
+
+.pane-local, .pane-shared {
+  height: 50%;
+  min-height: 45px;
+  padding: 4px;
+  font-size: 0.8rem;
+  outline: none;
+  overflow-y: auto;
+  word-break: break-word;
+  white-space: pre-wrap;
+  box-sizing: border-box;
+}
+.pane-local { border-bottom: 1px dashed #cbd5e0; background-color: #ffffff; }
+.pane-local:focus { background-color: #fffbeb; }
+
+.pane-shared { background-color: #f8fafc; color: #a0aec0; cursor: not-allowed; }
+.pane-shared.connected { background-color: #f0f9ff; color: #1a202c; cursor: text; }
+.pane-shared.connected:focus { background-color: #f0fdf4; }
+
+/* Grey hint text inside empty cells */
+.pane-local:empty::before, .pane-shared:empty::before, .whole-day-content:empty::before {
+  content: attr(data-placeholder);
+  color: #cbd5e0;
+  pointer-events: none;
+}
+
+/* Rooms (only visible when rooms.js is switched on) */
+#room-controls { display: inline-flex; align-items: center; gap: 8px; padding-left: 10px; border-left: 2px solid #e2e8f0; flex-wrap: wrap; }
+#room-controls input { padding: 6px 12px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 0.9rem; outline: none; width: 120px; }
+#join-room-btn { background-color: #3b82f6; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 500; cursor: pointer; font-size: 0.9rem; }
+#join-room-btn:hover { background-color: #2563eb; }
+#room-status { font-size: 0.85rem; color: #718096; font-weight: 500; }
+.practice-badge { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; border-radius: 8px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+.practice-badge[hidden] { display: none; }

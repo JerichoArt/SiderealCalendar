@@ -1,40 +1,38 @@
-const CACHE_NAME = 'sidereal-calendar-v1';
+// Network first, so updates arrive as soon as you are online; the cache is the offline fallback.
+// Bump the version number whenever you want installed copies to drop their old files.
+const CACHE_NAME = 'sidereal-calendar-v2';
 const ASSETS = [
-  '',
+  './',
   'index.html',
-  'app.js',
-  'style.css',
-  'https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css'
+  'calendar.js',
+  'calendar.css',
+  'rooms.js',
+  'sidereal-core.js',
+  'manifest.json'
 ];
 
-// Install Event
-self.addEventListener('install', (event) => {
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Caching shell assets');
-      return cache.addAll(ASSETS);
-    })
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// Activate Event
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      );
-    })
-  );
-});
-
-// Fetch Event
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request);
-    })
+    fetch(event.request)
+      .then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
