@@ -1,12 +1,11 @@
 // Network first, so updates arrive as soon as you are online; the cache is the offline fallback.
 // Bump the version number whenever you want installed copies to drop their old files.
-const CACHE_NAME = 'sidereal-calendar-v2';
+const CACHE_NAME = 'sidereal-calendar-v3';
 const ASSETS = [
   './',
   'index.html',
   'calendar.js',
   'calendar.css',
-  'rooms.js',
   'sidereal-core.js',
   'manifest.json'
 ];

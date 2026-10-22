@@ -9,13 +9,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="calendar.css?v=3">
+  <link rel="stylesheet" href="calendar.css?v=4">
 </head>
 <body class="p-4 md:p-6">
   <div class="max-w-7xl mx-auto">
     <h1 class="text-3xl font-bold mb-4 text-center text-gray-800">Sidereal Calendar</h1>
 
-    <div class="controls flex flex-wrap items-center gap-4 mb-4">
+    <div class="controls flex flex-wrap items-center gap-4 mb-3">
       <label class="flex items-center gap-2">Year: <select id="year-select" class="border border-gray-300 rounded px-2 py-1"></select></label>
 
       <label class="flex items-center gap-1">
@@ -29,12 +29,12 @@
       <span id="season-label" class="text-sm font-medium text-gray-600"></span>
 
       <div class="flex flex-wrap gap-2 w-full lg:w-auto lg:ml-auto justify-center sm:justify-start">
-        <div class="flex flex-col md:flex-row items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner">
-          <label for="datetime-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
-          <input type="text" id="datetime-input" placeholder="DD/MM/YYYY HH:MM" class="border border-gray-300 rounded px-2 py-1 text-gray-800">
-          <button id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm whitespace-nowrap">Go</button>
-          <div id="hour-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">Click an Hour box</div>
-        </div>
+        <form id="goto-form" class="flex items-center gap-2 bg-gray-100 p-3 rounded-md shadow-inner">
+          <label for="date-input" class="text-gray-700 font-medium whitespace-nowrap">Go to:</label>
+          <input type="text" id="date-input" inputmode="numeric" autocomplete="off" placeholder="DD/MM/YYYY" class="border border-gray-300 rounded px-2 py-1 text-gray-800 w-32">
+          <button type="submit" id="go-to-btn" class="bg-green-500 hover:bg-green-600 text-white font-semibold px-3 py-1 rounded-md shadow-sm">Go</button>
+        </form>
+        <div id="hour-display-output" class="text-gray-800 font-medium bg-gray-200 px-3 py-1 rounded-md min-w-[150px] text-center">Hover over an hour</div>
         <button id="today-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2 rounded-md shadow-sm">Today</button>
 
         <div class="flex items-center gap-3 flex-wrap">
@@ -49,19 +49,20 @@
             <span>Follow local daylight saving</span>
           </label>
         </div>
-
-        <!-- Rooms: hidden unless rooms.js is switched on -->
-        <div id="room-controls">
-          <span id="practice-badge" class="practice-badge" hidden>Practice mode</span>
-          <input type="text" id="room-input" placeholder="Room Name..." />
-          <input type="password" id="room-password-input" placeholder="Password..." />
-          <button id="join-room-btn" type="button">Join Room</button>
-          <span id="room-status">Offline Mode</span>
-        </div>
       </div>
     </div>
 
-    <p class="text-sm text-gray-600 mb-2">Hours are planet time, the same for everyone. Green hours are your work window, ☀ marks sunrise and ☾ sunset at your location.</p>
+    <p class="text-sm text-gray-600 mb-2">Hours are planet time, the same for everyone. Green hours are your work window; ☀ marks sunrise and ☾ sunset at your location. Click an hour or a Whole Day box to add an event, or drag across several to span them.</p>
+
+    <!-- Stays in view while scrolling: where the chosen day sits within its season -->
+    <div id="season-bar" class="season-bar">
+      <div id="sb-text" class="sb-text"></div>
+      <div class="sb-track">
+        <div id="sb-fill" class="sb-fill"></div>
+        <div id="sb-ticks"></div>
+        <div id="sb-marker" class="sb-marker"></div>
+      </div>
+    </div>
 
     <div class="overflow-x-auto shadow-lg rounded-lg">
       <table id="calendar-table">
@@ -80,8 +81,43 @@
     </div>
   </div>
 
+  <!-- Event editor -->
+  <div id="event-modal" class="modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="em-heading">
+      <h2 id="em-heading">New event</h2>
+      <label class="em-field">What
+        <textarea id="em-text" rows="3" maxlength="2000" placeholder="Event details…"></textarea>
+      </label>
+      <div class="em-row">
+        <label><input type="radio" name="em-type" value="hours" checked> Hours</label>
+        <label><input type="radio" name="em-type" value="days"> Whole days</label>
+        <span class="em-length">Length <input type="number" id="em-length" min="1" max="400" value="1"> <span id="em-unit">hours</span></span>
+      </div>
+      <div class="em-when"><div id="em-planet"></div><div id="em-local"></div></div>
+      <div class="em-row em-move">
+        Move:
+        <button type="button" data-move="-1h" class="em-hourmove">−1 hour</button>
+        <button type="button" data-move="1h" class="em-hourmove">+1 hour</button>
+        <button type="button" data-move="-1d">−1 day</button>
+        <button type="button" data-move="1d">+1 day</button>
+      </div>
+      <div class="em-row em-colors">Colour:
+        <label class="sw"><input type="radio" name="em-color" value="green" checked><span class="ev-green"></span></label>
+        <label class="sw"><input type="radio" name="em-color" value="blue"><span class="ev-blue"></span></label>
+        <label class="sw"><input type="radio" name="em-color" value="amber"><span class="ev-amber"></span></label>
+        <label class="sw"><input type="radio" name="em-color" value="rose"><span class="ev-rose"></span></label>
+        <label class="sw"><input type="radio" name="em-color" value="purple"><span class="ev-purple"></span></label>
+      </div>
+      <div class="em-actions">
+        <button type="button" id="em-delete" class="em-danger">Delete</button>
+        <span class="em-spacer"></span>
+        <button type="button" id="em-cancel">Cancel</button>
+        <button type="button" id="em-save" class="em-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="sidereal-core.js"></script>
-  <script src="rooms.js"></script>
   <script src="calendar.js" defer></script>
 </body>
 </html>

@@ -41,7 +41,7 @@
   // true Sun crossing indefinitely.
   const LEAP_NUM = 10, LEAP_DEN = 39, LEAP_PHASE = 35;
 
-  const SEASONS = ['Α', 'Β', 'Γ', 'Δ'];
+  const SEASONS = ['α', 'β', 'γ', 'δ'];
   const MONTHS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
   const WEEKDAYS = [
     { name: 'Mercury', glyph: '☿' },
