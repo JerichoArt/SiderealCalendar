@@ -94,7 +94,7 @@ When you change any file, raise the version in `CACHE_NAME` in `sw.js` so instal
 
 ## The clock
 
-The Sidereal Clock shows the same planet-wide time and the same date on an analogue dial and digital display.
+The Sidereal Clock shows the same planet-wide time and the same date on an analogue dial and a digital display.
 ## Licence
 
 Released under the [MIT Licence](LICENSE). Copyright (c) 2025 Željko Ivanković.
