@@ -1,69 +1,102 @@
-# **Sidereal Decimal Calendar PWA**
+# Sidereal Calendar
 
-This project is a Progressive Web Application (PWA) that presents a unique calendar system based on a sidereal year, divided into custom decimal time units. It offers an interactive way to manage, visualize, and collaboratively edit schedules within this alternative temporal framework.
+A personal calendar for the sidereal calendar system used by the [Sidereal Clock](#the-clock). Plan events by hour or by whole days, on a calendar that is the same for everyone on the planet. Everything is stored in your own browser, and you can share events by exporting and importing a file.
 
-## **Features**
+**Live version:** https://jerichoart.github.io/SiderealCalendar/
 
-* **Custom Decimal Time Units:** The calendar operates on a system where:
-  * 1 Nare (Hour) = 50 Dins
-  * 1 Day = 10 Nares (Hours)
-  * 1 Month = 50 Days
-  * 1 Season = 5 Months (Named using the Greek Alphabet: **Α (Alpha), Β (Beta), Γ (Gamma), Δ (Delta)**)
-  * 1 Year = 4 Seasons
-  * The smallest unit displayed in the calendar cells is an "Hour" (Nare).
-* **Sidereal Year Basis:** The entire calendar system is anchored to the length of a sidereal year (approximately 365 days, 5 hours, 48 minutes, 45 seconds).
-* **Dual-Pane Hour Cells:** Each "Hour" (Nare) block features a split-pane layout:
-  * **Local Pane (Top):** For your personal, offline-first schedule. Saved completely in your local browser storage.
-  * **Shared Pane (Bottom):** A real-time synchronized field for collaborative schedules.
-* **Secured Multi-user Room Sync:** Connect with team members using custom Room Names and passwords. When connected, the shared inputs unlock and sync instantly across all active users using real-time database hooks.
-* **Smart Arrow Navigation:** Easily cycle page-by-page through your calendar using intuitive left (<-) and right (->) arrow buttons right next to the Month selector. The navigation automatically handles rolling multi-tier boundaries—incrementing or decrementing seasons and years gracefully when you pass the first or last month.
-* **Globally Adaptive Astronomical Overlays:** Integrates `SunCalc` API logic with an interactive coordinates system. Clicking the location action button provides upfront guidance before opening browser location alerts, prompting you to either auto-detect via GPS or directly type in manual coordinate decimals (e.g., via `latlong.net`). Calculates and projects precise local sunrise and sunset positions anywhere on Earth as custom SVG Sun and Moon icons.
-* **Nomadic Working Hours Toggle:** Includes a **"Lock work hours to UK"** checkbox preference. When unchecked, your standard 9-to-5 working envelope dynamically recalculates and shifts to mirror the true solar day of your active coordinate longitude (ideal for tracking local schedules). When checked, it anchors your 9-to-5 business hours strictly to the UK/Home base timeline (ideal for remote workers reporting back to a domestic team). 
-* **Gregorian to Sidereal Conversion:** Input any Gregorian date and time (DD/MM/YYYY HH:MM) to instantly jump to its corresponding Sidereal date, with the display output cleanly rendering your custom Greek seasons (e.g., *Season Γ (Gamma)*).
-* **Real-time Sidereal Display:** Hover over or click on any "Hour" cell to see its corresponding real-world Gregorian date and time window displayed instantly in the control box.
-* **Data Persistence:** All personal (Local) calendar data is automatically saved in your browser's local storage, ensuring your entries are retained between sessions.
-* **Import/Export Data:**
-  * **Export:** Download your local calendar data as a JSON file for backup or sharing.
-  * **Import:** Load calendar data from a JSON file, featuring smart-merge functionality to combine existing entries with imported data.
-* **"Today" Button:** Instantly snap the calendar matrix to your current real-world date, complete with distinct highlighting on the exact active day and hour.
-* **PWA Capabilities:** Fully installable on desktop and mobile devices via `manifest.json` and a background `sw.js` for an app-like feel, fast loading times, and offline access.
-* **Responsive Design:** Re-architected with independent internal viewport scrolling to prevent table cell clipping while wrapping action buttons gracefully on tight portrait mobile viewports.
+## The calendar system
 
----
+| Unit | Length |
+|---|---|
+| Year | One sidereal lap of the Sun. Year 0 began on 13 April 2000 (UTC) |
+| Month | 36 days, numbered I to X |
+| Week | 6 days: ☿ Mercury, ♀ Venus, ♂ Mars, ♃ Jupiter, ♄ Saturn, ☽ Moon |
+| Season | 90 days (15 weeks), named α β γ δ. A season can start partway through a month |
+| Return days | 5 extra days after month X (6 in a leap year), the mandatory rest days |
+| Day | 24 hours, shown in **planet time**, the same for everyone |
 
-## **How to Use**
+Leap years occur 10 times in every 39 years. Seasons are positions in Earth's orbit against the stars, not the weather. The calendar shows years 0 to 100 (April 2000 onwards).
 
-1. **Open the Calendar:** Simply open the `index.html` file in a web browser, or launch it from your pinned taskbar application shortcut.
-2. **Navigate:** Click the <- and -> buttons flanking the Month dropdown to page fluidly through months, seasons, and years, or use the dropdowns to jump directly to a target block.
-3. **Set Your Location Profile:** 
-   * Click the **📍 Location Button** in the main control panel.
-   * Read the context indicator popup: click **Allow** on the native browser window to auto-sync with your current device GPS coordinates, or choose **Never Allow / Block** to paste custom coordinates manually.
-   * Toggle the **Lock work hours to UK** option to choose whether your highlighted 9-to-5 frame moves with your coordinates or anchors strictly back to home time.
-4. **Use Local Calendar:** Click on any "Local..." input (top half of an hour cell) or "Whole Day" cell to type notes. Your changes save instantly to your browser's local storage.
-5. **Connect to a Shared Room:** 
-   * Enter your shared **Room Name** and **Password** in the top-right control bar.
-   * Click **Join Room**.
-   * Once successfully authenticated, the bottom half of the hour cells ("Shared...") will unlock.
-   * Typing inside a shared cell instantly updates the database and broadcasts the edits to any other connected clients viewing that room in real-time.
-6. **Go to Date:** Enter a target into the "Go to:" field using the `DD/MM/YYYY HH:MM` format and click "Go" to scroll the calendar automatically to those calculated sidereal coordinates.
-7. **Import/Export:** Use **Export Data** at the bottom of the page to securely back up your local calendar logs, or use **Import Data** to merge a previously saved configuration file.
+## Using the calendar
 
----
+### Finding your way around
 
-## **Project Structure**
+- **Year** and **Month** selectors, with arrows to step month by month. After month X comes **Return days**, then the next year.
+- The **Today** button jumps to the current day and hour.
+- **Go to** takes a date as `DD/MM/YYYY`. Press Enter or click Go, and the calendar jumps to the sidereal day containing midday on that date.
+- Hover over an hour to see the matching ordinary date and time on your own clock.
 
-* `index.html`: Structure and layout containing the responsive wrapper and control modules.
-* `app.js`: Contains all the calculation logic, clock engines, Local Storage actions, and Supabase client-room synchronization frameworks.
-* `style.css`: The styling sheet housing customized cell structures, desktop-to-mobile layouts, and interactive UI visual classes.
-* `manifest.json`: Configuration manifest mapping out PWA assets, coloring profiles, and device launch specifications.
-* `sw.js`: Script facilitating localized resource caching, performance buffering, and custom offline data delivery.
+### Reading the table
 
----
+- **Day column**: the day number, the weekday symbol and name, and a green badge (α, β, γ or δ) on the day a season begins. A thicker line marks the start of each week, and a green line the start of a season.
+- **Whole Day column**: for events that cover whole days.
+- **24 hour columns** (00 to 23, planet time), with these marks:
+  - **Green hours** are your work window.
+  - **☀** marks sunrise and **☾** sunset at your location.
 
-## **Technical Details**
+### Season bar
 
-* **HTML5 & Vanilla JavaScript:** Drives core application frameworks and structural algorithms entirely client-side.
-* **Tailwind CSS:** Manages sleek interface styling and flexible layout configurations.
-* **Supabase Client SDK:** Leverages Postgres database channels and subscription engines to handle real-time room streaming and secure credential matches.
-* **SunCalc API:** Leverages deep astronomical computation rules to align Gregorian solar positions into the internal Sidereal decimal matrix.
-* **Local Storage:** Manages direct, secure client-side browser file persistence for personal data, alongside user coordinate profiles and timezone state locks.
+The bar above the table shows how far through its season the selected day is, with week ticks and month starts marked. It stays at the top of the screen while you scroll. Click any day or hour to move its marker. Return days show a gold bar.
+
+### Events
+
+- **Add an hour event**: click an hour, or drag across several hours. A drag can run across midnight into the next day.
+- **Add a whole-day event**: click a Whole Day box, or drag down several days.
+- In the editor, set the text, change the length, pick a colour, or shift the start by an hour or a day. Click an event again to edit or delete it.
+- Events that overlap are stacked, and an event that crosses midnight continues on the next day.
+- On a touch screen, tap a cell and set the length in the editor.
+- Event text is plain text, up to 2,000 characters.
+
+### Location and work hours
+
+- The **📍 button** sets your location by GPS or by typing coordinates. It is used for sunrise and sunset.
+- **Work zone** sets which time zone's 09:00 to 17:00 is shown as green. The default is your device's zone. Someone in Australia working UK hours can pick Europe/London.
+- **Follow local daylight saving** is off by default, so the green hours never move. Tick it to follow the zone's clock changes.
+
+Location, work zone and the daylight-saving choice are shared with the clock when both are served from the same site (for example, both on `yourname.github.io`).
+
+## Your data
+
+- Events are saved **in your browser only**, on the device you used. Clearing the browser's site data deletes them. Press **Export Data** now and then as a backup.
+- **Export Data** saves all your events as a `.json` file.
+- **Import Data** reads a file exported by someone else (or by you) and **adds only the events you don't already have**. Anything already in your calendar is left unchanged, so importing never overwrites your entries, and importing the same file twice adds nothing new.
+- Each event carries its own ID, which is how the calendar tells whether it already has an event.
+- Entries from the earlier 50-day, 10-hour layout can't be converted and are not shown, though they remain in the browser's storage. Entries from the previous version of this layout are converted automatically.
+
+Multi-user rooms (shared through Supabase) were removed from this version.
+
+## Files
+
+| File | What it does |
+|---|---|
+| `index.html` | The page and the event editor |
+| `calendar.js` | The calendar: table, events, season bar, work hours, export and import |
+| `calendar.css` | Styling |
+| `sidereal-core.js` | All the calendar and time maths. **Shared with the clock, so keep the two copies identical** |
+| `sw.js` | Offline support (network first, cache as a fallback) |
+| `manifest.json` and icons | Makes the calendar installable as an app |
+
+## Running it yourself
+
+There is nothing to build.
+
+1. Clone or download the repository.
+2. Serve the folder with a local web server. In VS Code, the *Live Server* extension works. Opening `index.html` directly will not work, because service workers need `http://localhost` or `https`.
+3. To publish, turn on GitHub Pages for the repository.
+
+When you change any file, raise the version in `CACHE_NAME` in `sw.js` so installed copies refresh.
+
+## Built with
+
+- [SunCalc](https://github.com/mourner/suncalc) for sunrise and sunset
+- Tailwind CSS 2 (CDN) and the Inter font
+- Plain JavaScript, with no framework and no build step
+
+## The clock
+
+The Sidereal Clock shows the same planet-wide time and the same date on an analogue dial and digital display.
+## Licence
+
+Released under the [MIT Licence](LICENSE). Copyright (c) 2025 Željko Ivanković.
+
+You are welcome to use it, adapt it and build on it. A link back to the original is appreciated but not required.
